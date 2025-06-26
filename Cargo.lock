@@ -6535,6 +6535,7 @@ name = "styx-pcode-sleigh-backend"
 version = "1.2.0"
 dependencies = [
  "cxx",
+ "log",
  "num",
  "smallvec",
  "styx-cpu-type",
