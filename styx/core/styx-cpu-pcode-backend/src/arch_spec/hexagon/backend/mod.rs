@@ -668,9 +668,9 @@ impl HexagonPcodeBackend {
     /// # Arguments
     ///
     /// * `full_pcodes`: the function appends the list of pcodes for each instruction
-    /// to the mutable Vec that was passed in with this argument
+    ///   to the mutable Vec that was passed in with this argument
     /// * `mmu`: the MMU. Needed for lookahead/lookbehind, which is used in generating
-    /// the right context options to pass to Sleigh for decoding.
+    ///   the right context options to pass to Sleigh for decoding.
     /// * `ev`: event controller, used when getting pcodes for an instruction from Ghidra's decompiler backend.
     fn fetch_decode_packet(
         &mut self,
@@ -979,11 +979,11 @@ impl HexagonPcodeBackend {
 ///
 /// - `first_pkt`: this is the very first packet in execution. Needed to cover some corner cases.
 /// - `pkt_first_duplex`: are we in an instruction with a duplex where the packet is comprised of _only_ one duplex?
-/// For example, `{ r0 = r1; r8 = r9 }` is a duplex instruction where the duplex is the only instruction in the packet.
-/// We will _also_ call `pkt_started` if this hook is triggered.
+///   For example, `{ r0 = r1; r8 = r9 }` is a duplex instruction where the duplex is the only instruction in the packet.
+///   We will _also_ call `pkt_started` if this hook is triggered.
 /// - `pkt_started`: are we the first instruction in a new packet?
 /// - `pkt_inside`: are we in the middle of a packet? That is, explictly not the first or last instruction in a packet.
-/// For this to be called, the packet must have either 3 or 4 instructions.
+///   For this to be called, the packet must have either 3 or 4 instructions.
 /// - `pkt_ended`: are we at the end of a packet?
 ///
 /// All of these three hooks may end up using SavedContextOpts to set context options for Sleigh for either the current
@@ -998,8 +998,8 @@ impl HexagonPcodeBackend {
 /// At the end of the packet, we will call
 /// - `post_packet_fetch`, called after the packet was fully fetched and we have P-codes for each instruction
 /// - `sequence`, called after the `post_packet_fetch` and requires an implementation of an algorithm that re-orders
-/// the less than or equal to 4 instructions in a Hexagon packet so the instructions in a packet can run sequentially and
-/// correctly.
+///   the less than or equal to 4 instructions in a Hexagon packet so the instructions in a packet can run sequentially and
+///   correctly.
 ///
 /// After `fetch_decode_packet` finishes and all P-codes from the packet (including additional P-codes generated to
 /// deal with register banking - see section 3.3 in the manual for an explanation) are executed, we finally call `post_packet_execute`.
