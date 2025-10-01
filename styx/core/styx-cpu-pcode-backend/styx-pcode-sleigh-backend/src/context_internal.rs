@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: BSD-2-Clause
-use std::pin::Pin;
-
 use styx_sleigh_bindings::ffi;
 
 use crate::sleigh_obj::{DeriveParent, SleighObj};

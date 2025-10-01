@@ -274,12 +274,12 @@ impl HexagonExecutionHelper for DefaultHexagonExecutionHelper {
         //
         // As such, we can conclude that the second sub-instruction
         // in a duplex is the last instruction in a packet.
-        match prev_state {
-            PktState::FirstDuplex(_) | PktState::PktStartedFirstDuplex(_) => {
-                trace!("the previous instruction was a duplex, ending the packet.");
-                return Ok(PktState::PktEnded(None));
-            }
-            _ => {}
+        if matches!(
+            prev_state,
+            PktState::FirstDuplex(_) | PktState::PktStartedFirstDuplex(_)
+        ) {
+            trace!("the previous instruction was a duplex, ending the packet.");
+            return Ok(PktState::PktEnded(None));
         }
 
         trace!("fetching 4 instruction words from memory");

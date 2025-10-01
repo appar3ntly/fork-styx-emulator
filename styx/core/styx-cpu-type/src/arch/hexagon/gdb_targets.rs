@@ -124,7 +124,7 @@ lazy_static! {
 
     // Combine HVX register map and default register map
     pub static ref HEXAGON_CORE_HVX_CPU_REGISTER_MAP: BTreeMap<usize, CpuRegister> = HEXAGON_CORE_CPU_REGISTER_MAP
-        .clone().into_iter().chain(HEXAGON_CORE_HVX_CPU_REGISTER_MAP.clone().into_iter()).collect();
+        .clone().into_iter().chain(HEXAGON_HVX_REGISTER_MAP.clone().into_iter()).collect();
 }
 
 #[gdb_target_description]
