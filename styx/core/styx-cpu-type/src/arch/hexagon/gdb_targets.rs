@@ -133,7 +133,7 @@ lazy_static! {
 pub struct HexagonCpuTargetDescription {
     #[args(
         // TODO: what should this be?
-        gdb_arch_name("hexagon-core"),
+        gdb_arch_name("hexagon:core"),
         gdb_feature_xml(HEXAGON_CORE),
         register_map(HEXAGON_CORE_CPU_REGISTER_MAP),
         pc_register(ArchRegister::Basic(BasicArchRegister::Hexagon(HexagonRegister::Pc))),
@@ -147,7 +147,7 @@ pub struct HexagonCpuTargetDescription {
 pub struct HexagonHvxCpuTargetDescription {
     #[args(
         // TODO: what should this be?
-        gdb_arch_name("hexagon-hvx"),
+        gdb_arch_name("hexagon:hvx"),
         gdb_feature_xml(HEXAGON_HVX),
         register_map(HEXAGON_CORE_HVX_CPU_REGISTER_MAP),
         pc_register(ArchRegister::Basic(BasicArchRegister::Hexagon(HexagonRegister::Pc))),
