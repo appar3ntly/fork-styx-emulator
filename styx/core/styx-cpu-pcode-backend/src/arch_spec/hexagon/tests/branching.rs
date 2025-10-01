@@ -5,14 +5,16 @@ use crate::arch_spec::hexagon::tests::*;
 fn test_cond_branching() {
     // need to have a separate test for .new, so
     // that p0 could be in the same packet.
-    let (mut cpu, mut mmu, mut ev) = setup_asm(
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
         r#"
-{ r4 = r0; p0 = cmp.eq(r1, r0); }
-{ r2 = add(r4, #2); r5 = r4; if (p0) jump 0x10; r3 = add(r0, #1) }
-{ r0 = #322 }
-{ r0 = #929 }
+       0:	04 40 60 70	70604004 { 	r4 = r0
+       4:	00 c0 01 f2	f201c000   	p0 = cmp.eq(r1,r0) }
+       8:	42 40 04 b0	b0044042 { 	r2 = add(r4,#0x2)
+       c:	08 40 00 5c	5c004008   	if (p0) jump:nt 0x18
+      10:	03 31 45 30	30453103   	r5 = r4; 	r3 = add(r0,#1) }
+      14:	40 e8 00 78	7800e840 { 	r0 = #0x142 }
+      18:	20 f4 01 78	7801f420 { 	r0 = #0x3a1 }
 "#,
-        None,
     );
     cpu.write_register(HexagonRegister::R0, 32u64).unwrap();
     cpu.write_register(HexagonRegister::R1, 32u64).unwrap();
@@ -34,9 +36,6 @@ fn test_cond_branching() {
     assert_eq!(r2, 34);
 }
 
-// TODO: jumpr branch (indirect), conditional branch,
-// and a branch that isn't at the end of the packet!
-// FIXME: come back to do this
 #[test]
 fn test_basic_branching() {
     const R1: u32 = 47;
@@ -65,18 +64,19 @@ lab:
     let initial_isa_pc = get_isa_pc(&mut cpu);
 
     trace!("starting initial jump");
-    // register transfer jump 1 insn
+    // register transfer jump 1 insn and 1 packet
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
 
     let mid_isa_pc = get_isa_pc(&mut cpu);
+    // The 12 offset is because we skip over the "junk" packet
     assert_eq!(mid_isa_pc - initial_isa_pc, 12);
 
-    // There's an immext here
     trace!("starting initial multiply");
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
 
+    // We are checking just after the multiply after the "lab" label.
     let end_branch_isa_pc = get_isa_pc(&mut cpu);
     assert_eq!(end_branch_isa_pc - initial_isa_pc, 20);
 
@@ -92,7 +92,6 @@ lab:
     assert_eq!(r2, r0 + 2);
 }
 
-// FIXME: help
 #[test]
 fn test_basic_branching_single_insn_pkt() {
     const R1: u32 = 47;
@@ -111,11 +110,12 @@ fn test_basic_branching_single_insn_pkt() {
     let initial_isa_pc = get_isa_pc(&mut cpu);
 
     trace!("starting initial jump");
-    // register transfer jump is 1 insn
+    // register transfer jump is 1 insn (and 1 packet)
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
 
     let mid_isa_pc = get_isa_pc(&mut cpu);
+    // We expect the PC to be at the first add instruction
     assert_eq!(mid_isa_pc - initial_isa_pc, 8);
 
     trace!("starting initial add");
