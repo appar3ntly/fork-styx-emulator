@@ -1086,7 +1086,7 @@ pub trait HexagonExecutionHelper: derive_more::Debug + Send {
     /// new-value stores require the new-value to be referenced in the last packet slot (see section 5.6).
     ///
     /// For example, we may have something like
-    /// ```
+    /// ```ignore
     /// {
     ///   if (p0.new) r10 = add(r8, r9)
     ///   p0 = cmp.eq(r0, r1)

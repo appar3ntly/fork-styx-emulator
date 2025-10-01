@@ -178,8 +178,6 @@ fn test_predicate_dotnew() {
     // We'll have two instructions for each immext, and then the second instruction
     // doesn't have an immediate _extension_ so we're good on that end, total
     // 5 instructions
-    // TODO: does immext need to be set to 0xffffffff every cycle?
-    // it doesn't seem like it..
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
 
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
@@ -715,37 +713,6 @@ fn test_dotnew_offset() {
             report.exit_reason,
             TargetExitReason::InstructionCountComplete
         );
-        /*for typ in test.types {
-
-            if typ != DotnewOffsetItype::Immext {
-                total_real_insns += 1;
-            }
-
-            /*let read_real_insns = cpu.
-                .shared_state
-                .get(&crate::SharedStateKey::HexagonTrueInsnCount)
-                .unwrap_or(&0);
-
-            assert_eq!(total_real_insns, *read_real_insns);
-
-            trace!("real read insns is {}", read_real_insns);
-
-            if typ != DotnewOffsetItype::Immext {
-                // The mapping is zero-indexed
-                let dest_reg = cpu
-                    .shared_state
-                    .get(&crate::SharedStateKey::HexagonInsnRegDest(
-                        (*read_real_insns as usize) - 1,
-                    ));
-
-                match typ {
-                    DotnewOffsetItype::Insn1 => assert_eq!(*dest_reg.unwrap(), 7),
-                    DotnewOffsetItype::Insn2 => assert_eq!(*dest_reg.unwrap(), 5),
-                    DotnewOffsetItype::Dinsn => assert_eq!(*dest_reg.unwrap(), 9),
-                    _ => assert_eq!(dest_reg, None),
-                }
-            }*/
-        }*/
 
         // Run the generic tackon test
         // With immext, we expect to start at 0 but won't be set in map
