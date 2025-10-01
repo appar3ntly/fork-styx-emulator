@@ -83,7 +83,6 @@ lazy_static! {
         (63, HexagonRegister::UtimerHi.register())
     ]);
 
-    // TODO: which variants have HVX, and which ones don't?
     static ref HEXAGON_HVX_REGISTER_MAP: BTreeMap<usize, CpuRegister> = BTreeMap::from([
         (88, HexagonRegister::V0.register()),
         (89, HexagonRegister::V1.register()),
@@ -146,7 +145,6 @@ pub struct HexagonCpuTargetDescription {
 #[derive(Debug, Default)]
 pub struct HexagonHvxCpuTargetDescription {
     #[args(
-        // TODO: what should this be?
         gdb_arch_name("hexagon:hvx"),
         gdb_feature_xml(HEXAGON_HVX),
         register_map(HEXAGON_CORE_HVX_CPU_REGISTER_MAP),

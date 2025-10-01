@@ -169,7 +169,6 @@ impl<L> Sleigh<L> {
 
         cxx::let_cxx_string!(variable_cxx = variable);
         let sleigh: Pin<&mut ffi::Sleigh> = self.obj.as_mut();
-        // safety: this should get dropped?
         let addr_lo = unsafe { ffi::new_address(default_code_space, 0) };
         let addr_hi = unsafe { ffi::new_address(default_code_space, u64::MAX) };
         sleigh.setContextVariableCached(&variable_cxx, &addr_lo, &addr_hi, value);

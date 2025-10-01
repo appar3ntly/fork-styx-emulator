@@ -542,7 +542,7 @@ impl HexagonPcodeBackend {
             saved_context_opts: SavedContextOpts::default(),
             regs_written: Vec::with_capacity(10),
             saved_execution_helper: None,
-            execution_helper: Some(execution_helper), // TODO: performance optimizations
+            execution_helper: Some(execution_helper),
             first_packet: true,
             space_manager,
             endian,
@@ -620,7 +620,6 @@ impl HexagonPcodeBackend {
                 PCodeStateChange::InstructionAbsolute(new_pc) => {
                     trace!("Pcode state change absolute jump new PC=0x{new_pc:X}");
                     self.last_was_branch = true;
-                    // self.set_pc(new_pc)?;
                     return Ok(Ok(HexagonSingleInstructionAction::PcChange(new_pc)));
                     // Don't increment PC, jump to next instruction
                 }
@@ -663,6 +662,16 @@ impl HexagonPcodeBackend {
         pcodes
     }
 
+    /// In a loop, start at the current PC, which will always be at the start of a packet, and fetch all the instructions
+    /// up till the end of the current packet. Called at the beginning of every packet.
+    ///
+    /// # Arguments
+    ///
+    /// * `full_pcodes`: the function appends the list of pcodes for each instruction
+    /// to the mutable Vec that was passed in with this argument
+    /// * `mmu`: the MMU. Needed for lookahead/lookbehind, which is used in generating
+    /// the right context options to pass to Sleigh for decoding.
+    /// * `ev`: event controller, used when getting pcodes for an instruction from Ghidra's decompiler backend.
     fn fetch_decode_packet(
         &mut self,
         full_pcodes: &mut Vec<Vec<Pcode>>,
@@ -864,7 +873,6 @@ impl HexagonPcodeBackend {
         {
             execution_helper.post_packet_fetch(self);
 
-            // TODO: remove this allocation, and turn this into an option that can be taken and replaced
             execution_helper.sequence(self, full_pcodes, &mut ordering);
 
             // Now that sequencing is done, it is time to deal with predicate ANDing.
@@ -953,14 +961,68 @@ impl HexagonPcodeBackend {
     }
 }
 
+/// The HexagonExecutionHelper is a trait that allows the HexagonPcodeBackend
+/// to more easily fetch and decode instructions. It also keeps track of the ISA
+/// PC. To understand this better, the lifecycle of fetching, decoding, and executing
+/// is as follows:
+///
+/// `fetch_decode_packet`: called at the beginning of every packet, goes through every instruction starting
+/// at the PC of the current packet. It is worth understanding that the Sleigh backend fetches an instruction and
+/// lifts it at the same time to P-code. So in some sense, the fetching and lifting are analogous here, and we don't have hooks
+/// for after Sleigh fetches an instruction but before it lifts the instruction to P-codes.
+///
+/// Within `fetch_decode_packet`, we fetch individual instructions.
+/// For each individual instruction, we first call `pre_insn_fetch`.
+///
+/// The `pre_insn_fetch` will typically look at the current instruction in the packet to figure out where we are inside a packet.
+/// Based on this, some of the following hooks is called **before generating context options and passing them to Sleigh to lift.**
+///
+/// - `first_pkt`: this is the very first packet in execution. Needed to cover some corner cases.
+/// - `pkt_first_duplex`: are we in an instruction with a duplex where the packet is comprised of _only_ one duplex?
+/// For example, `{ r0 = r1; r8 = r9 }` is a duplex instruction where the duplex is the only instruction in the packet.
+/// We will _also_ call `pkt_started` if this hook is triggered.
+/// - `pkt_started`: are we the first instruction in a new packet?
+/// - `pkt_inside`: are we in the middle of a packet? That is, explictly not the first or last instruction in a packet.
+/// For this to be called, the packet must have either 3 or 4 instructions.
+/// - `pkt_ended`: are we at the end of a packet?
+///
+/// All of these three hooks may end up using SavedContextOpts to set context options for Sleigh for either the current
+/// instruction or future instructions. See `SavedContextOpts` for details on how this works.
+///
+/// Now, we will extract the context options for the current packet using `SavedContextOpts` and send off this information
+/// to Sleigh to lift and get our P-codes.
+///
+/// Then, `post_insn_fetch` is called. These hooks are repeatedly called, starting from `pre_insn_fetch`, until we hit the
+/// end of a packet.
+///
+/// At the end of the packet, we will call
+/// - `post_packet_fetch`, called after the packet was fully fetched and we have P-codes for each instruction
+/// - `sequence`, called after the `post_packet_fetch` and requires an implementation of an algorithm that re-orders
+/// the less than or equal to 4 instructions in a Hexagon packet so the instructions in a packet can run sequentially and
+/// correctly.
+///
+/// After `fetch_decode_packet` finishes and all P-codes from the packet (including additional P-codes generated to
+/// deal with register banking - see section 3.3 in the manual for an explanation) are executed, we finally call `post_packet_execute`.
 pub trait HexagonExecutionHelper: derive_more::Debug + Send {
-    // This is only called during execution, not decoding.
+    /// This retrieves the program counter.
+    ///
+    /// Currently the `HexagonPcodeBackend` uses this function when
+    /// its internal `pc` reading function is called, such as with `HexagonPcodeBackend::read_register_raw`.
     fn isa_pc(&self) -> u64;
+
+    /// Set the program counter. The `HexaxgonPcodeBackend` will call
+    /// this when its `set_pc` function is called, such as with `HexagonPcodeBackend::write_register_raw`.
+    ///
+    /// This is important since the execution helper
+    /// may want to maintain the program counter internally to
+    /// help with lookahead/lookbehind problems during decoding.
     fn set_isa_pc(&mut self, value: u64, backend: &mut HexagonPcodeBackend);
 
+    /// Called after the execution of every individual packet
     fn post_packet_execute(&mut self, _backend: &mut HexagonPcodeBackend) {}
 
-    // During decoding
+    /// This is called before invoking Ghidra's decompiler backend to lift from an instruction to P-code,
+    /// and called once for every instruction that needs to be fetched within a packet.
     fn pre_insn_fetch(
         &mut self,
         backend: &mut HexagonPcodeBackend,
@@ -969,20 +1031,33 @@ pub trait HexagonExecutionHelper: derive_more::Debug + Send {
         pc: u32,
     ) -> Result<PktState, HexagonFetchDecodeError>;
 
+    /// This is called immediately after invoking Ghidra's decompiler backend and receiving
+    /// P-codes for an individual instruction.
     fn post_insn_fetch(&mut self, _bytes_consumed: u64, _backend: &mut HexagonPcodeBackend) {}
 
+    /// This is called after _all_ P-codes are fetched for all instruction in a packet.
     fn post_packet_fetch(&mut self, backend: &mut HexagonPcodeBackend);
+
+    /// This is called after `pre_insn_fetch`, but **before** invoking Ghidra's decompiler.
+    /// This function is called if the current instruction being fetched/lifted
+    /// is the _first_ in the packet.
     fn pkt_started(
         &mut self,
         backend: &mut HexagonPcodeBackend,
         instrs: [GeneralHexagonInstruction; 4],
         pc: u32,
     ) -> Result<(), GeneratePcodeError>;
+    /// This is called after `pre_insn_fetch`, but **before** invoking Ghidra's decompiler.
+    /// This function is called if the current instruction being fetched/lifted
+    /// is _neither_ the first or last in the packet.
     fn pkt_inside(
         &mut self,
         backend: &mut HexagonPcodeBackend,
         instrs: [GeneralHexagonInstruction; 4],
     ) -> Result<(), GeneratePcodeError>;
+    /// This is called after `pre_insn_fetch`, but **before** invoking Ghidra's decompiler.
+    /// This function is called if the current instruction being fetched/lifted
+    /// is the _last_ in the packet.
     fn pkt_ended(
         &mut self,
         backend: &mut HexagonPcodeBackend,
@@ -990,14 +1065,40 @@ pub trait HexagonExecutionHelper: derive_more::Debug + Send {
         dotnew_regs_written: &[OutputRegisterType],
         dotnew_instructions: u32,
     ) -> Result<(), GeneratePcodeError>;
+    /// This is called after `pre_insn_fetch`, but **before** invoking Ghidra's decompiler.
+    /// This function is called if the current instruction being fetched/lifted
+    /// is the _first_ in the packet but also the only instructions in the packet is one duplex.
+    ///
+    /// For example: `{ r2 = r3; r6 = r7; }`
     fn pkt_first_duplex(
         &mut self,
         backend: &mut HexagonPcodeBackend,
         instrs: [GeneralHexagonInstruction; 4],
     ) -> Result<(), GeneratePcodeError>;
+
+    /// This is called after `pre_insn_fetch`, but **before** invoking Ghidra's decompiler.
+    /// This function is called if the current instruction being fetched/lifted
+    /// is the _first_ instruction during execution.
     fn first_pkt(&mut self, backend: &mut HexagonPcodeBackend, pc: u32);
 
-    // Returns indices in the order of execution
+    /// Sometimes, packets in Hexagon have a new-value register that sequentially is _used_ before
+    /// the new value is actually written. This can only occur for new-value compare jumps (section 8.5.1), as
+    /// new-value stores require the new-value to be referenced in the last packet slot (see section 5.6).
+    ///
+    /// For example, we may have something like
+    /// ```
+    /// {
+    ///   if (p0.new) r10 = add(r8, r9)
+    ///   p0 = cmp.eq(r0, r1)
+    /// }
+    /// ```
+    ///
+    /// The `sequence` function in the helper analyzes an array of array of pcodes (given in argument `pkt`), where
+    /// the each element in the outer array corresponds to the pcodes for an individual instruction. Based on this analysis,
+    /// it populates. The order stores the indices of each instruction in the packet in the order of execution. For the previous
+    /// example, we would expect the `ordering` array to store `[1, 0]`.
+    ///
+    /// **This function expects `ordering` to be empty.**
     fn sequence(
         &mut self,
         backend: &mut HexagonPcodeBackend,

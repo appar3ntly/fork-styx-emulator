@@ -291,9 +291,12 @@ impl HexagonExecutionHelper for DefaultHexagonExecutionHelper {
         // We read four instructions, since some decoding requires looking
         // ahead. Four instructions because every packet in Hexagon is at most
         // four instructions.
+        //
+        // NOTE: This may fail in the case of being at the end of the memory region
+        // that has the code in it.
         let insn_data_wide = mmu
             .read_u128_le_virt_code(self.pc_varnode.offset, backend)
-            .with_context(|| "couldn't prefetch the next insn from MMU")
+            .with_context(|| "couldn't prefetch the next insn from MMU, maybe we are at the end of a memory region?")
             .map_err(HexagonFetchDecodeError::Other)?;
 
         // Extract out the four instructions.

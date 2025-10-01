@@ -332,8 +332,7 @@ macro_rules! hexagon_arch_impl {
     };
 }
 
-// TODO: change to HexagonGeneralRegistersWithHvx? Need to find out which DSPs have HVX and which don't.
-macro_rules! hexagon_arch_impls (
+macro_rules! hexagon_nohvx_impls (
     ($($variant_name:ident),*) => {
         $(hexagon_arch_impl!(
             $variant_name,
@@ -344,9 +343,22 @@ macro_rules! hexagon_arch_impls (
     };
 );
 
+macro_rules! hexagon_hvx_impls (
+    ($($variant_name:ident),*) => {
+        $(hexagon_arch_impl!(
+            $variant_name,
+            HexagonGeneralRegistersWithHvx,
+            HexagonCpuTargetDescription
+        );
+    )*
+    };
+);
+
 // Found from https://github.com/n-o-o-n/idp_hexagon
 // QDSP6V67T is "Hexagon V67 Small Core."
-hexagon_arch_impls!(
-    QDSP6V4, QDSP6V5, QDSP6V55, QDSP6V60, QDSPV61, QDSP6V62, QDSP6V65, QDSP6V66, QDSP6V67,
-    QDSP6V67T, QDSP6V69, QDSP6V71, QDSP6V73, QDSP6V77, QDPS6V79
+hexagon_nohvx_impls!(QDSP6V4, QDSP6V5, QDSP6V55);
+
+hexagon_hvx_impls!(
+    QDSP6V60, QDSPV61, QDSP6V62, QDSP6V65, QDSP6V66, QDSP6V67, QDSP6V67T, QDSP6V69, QDSP6V71,
+    QDSP6V73, QDSP6V77, QDPS6V79
 );

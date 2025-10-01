@@ -23,7 +23,6 @@ fn test_duplex_immext() {
     assert_eq!(r4, 100 * 470);
 }
 
-// FIXME: test
 #[test]
 fn test_duplex_instructions() {
     // [0x16, 0x30, 0x05, 0x30]

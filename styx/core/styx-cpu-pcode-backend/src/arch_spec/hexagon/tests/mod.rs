@@ -37,16 +37,13 @@ pub fn setup_asm(
     expected_asm: Option<Vec<u8>>,
 ) -> (HexagonPcodeBackend, Mmu, EventController) {
     styx_util::logging::init_logging();
-    // objdump from example ppc program
-    // notably load/store operations are omitted because sleigh uses dynamic pointers
-    //   to represent memory spaces which change run to run.
     let init_pc = 0x1000u64;
 
     // Assemble instructions
-    // Processor default to thumb so we use that
+    // Section 1.2.1 - Hexagon is little endian
     let ks = Keystone::new(
         keystone_engine::Arch::HEXAGON,
-        keystone_engine::Mode::BIG_ENDIAN,
+        keystone_engine::Mode::LITTLE_ENDIAN,
     )
     .expect("Could not initialize Keystone engine");
     let asm = ks
@@ -60,8 +57,6 @@ pub fn setup_asm(
     }
     trace!("bytes {code:x?} asm {asm_str}");
 
-    // takes the objdump and extracts the binary from it
-    //  duplex instruction:
     setup_cpu_pc(init_pc, code)
 }
 

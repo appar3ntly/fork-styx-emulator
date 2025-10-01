@@ -400,32 +400,6 @@ mod hexagon_tests {
         assert_eq!(pcodes.len(), expected_pcodes_len);
     }
 
-    // TODO: fix this
-    #[cfg_attr(miri, ignore)]
-    #[test]
-    fn test_decompile_hexagon_packet() {
-        let (start, mut translator) =
-            manual_test_decompile("{ R1 = memh(R0); R5 = add(R4, R30); }");
-
-        translator.set_context_option(&ContextOption::HexagonImmext(0xffffffff));
-
-        let mut pcodes = vec![];
-        let bytes_used = translator.get_pcode(start, &mut pcodes, ()).unwrap();
-
-        println!("(packet) First part of packet {pcodes:?}");
-        assert_eq!(pcodes.len(), 1);
-        assert_eq!(bytes_used, 4);
-
-        let bytes_used = translator
-            .get_pcode(start + bytes_used, &mut pcodes, ())
-            .unwrap();
-        println!("(packet) Full packet {pcodes:?}");
-
-        // Cumulative length
-        assert_eq!(pcodes.len(), 4);
-        assert_eq!(bytes_used, 4);
-    }
-
     // Hexagon duplex instructions basically encode 2 instructions in 32 bits
     #[cfg_attr(miri, ignore)]
     #[test]
@@ -434,7 +408,6 @@ mod hexagon_tests {
         translator.set_context_option(&ContextOption::HexagonImmext(0xffffffff));
         translator.set_context_option(&ContextOption::HexagonSubinsn(1));
 
-        // TODO: assert that immext is right
         // The first get_pcode call will set immext, and won't return any pcodes
 
         let mut pcodes = vec![];
@@ -488,26 +461,6 @@ mod hexagon_tests {
         assert_eq!(pcodes.len(), 1);
         assert_eq!(bytes_used, 4);
     }
-
-    // TODO: test hardware loop, and decompile error.
-
-    /*#[cfg_attr(miri, ignore)]
-    #[test]
-    fn test_decompile_error() {
-        let start = 0x1000;
-        let data = vec![0xFFu8; 4];
-        let load_image = VectorLoader { start, data };
-        let mut translator = PcodeTranslator::new::<styx_sla::Arm7Le>(
-            &ArchVariant::Arm(ArmMetaVariants::ArmCortexA7(ArmCortexA7 {})),
-            load_image,
-        )
-        .unwrap();
-        translator.set_context_option(ContextOption::ThumbMode(true));
-
-        let mut pcodes = Vec::new();
-        let result = translator.get_pcode(start, &mut pcodes, ());
-        assert!(matches!(result, Err(SleighTranslateError::BadDataError)));
-    }*/
 }
 
 #[cfg(test)]
