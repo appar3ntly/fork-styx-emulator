@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 use log::trace;
+use styx_errors::anyhow::Context;
 use styx_pcode::pcode::VarnodeData;
 use styx_processor::{cpu::CpuBackend, event_controller::EventController, memory::Mmu};
 
@@ -30,7 +31,9 @@ impl<T: CpuBackend> CallOtherCallback<T> for NewReg {
         // Not happy about clones
         let mut input = inputs[0].clone();
         input.offset += DEST_REG_OFFSET;
-        let reg_val = backend.read(&input).unwrap();
+        let reg_val = backend
+            .read(&input)
+            .with_context(|| "couldn't read the register's new value")?;
 
         // For now, since there are no packet semantics, we should just
         // use the previously set value.
@@ -38,7 +41,9 @@ impl<T: CpuBackend> CallOtherCallback<T> for NewReg {
         // TODO: update when packet semantics come into play
         trace!("newreg varnode input is {input}");
 
-        backend.write(output.unwrap(), reg_val).unwrap();
+        backend
+            .write(output.unwrap(), reg_val)
+            .with_context(|| "couldn't write the dotnew value to the specified output varnode")?;
 
         Ok(PCodeStateChange::Fallthrough)
     }

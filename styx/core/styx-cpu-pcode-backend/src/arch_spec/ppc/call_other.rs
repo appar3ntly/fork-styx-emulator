@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 use log::debug;
+use styx_errors::UnknownError;
 use styx_pcode::pcode;
 use styx_processor::{cpu::CpuBackend, event_controller::EventController, memory::Mmu};
 
@@ -51,10 +52,10 @@ impl<T: CpuBackend> CallOtherCallback<T> for ReturnFromInterrupt {
     ) -> Result<PCodeStateChange, CallOtherHandleError> {
         let pc = cpu.pc().unwrap();
         let [_msr, srr1_varnode] = inputs else {
-            return Err(CallOtherHandleError::Other("invalid inputs".into()));
+            return Err(UnknownError::msg("invalid inputs").into());
         };
         let Some(new_msr_varnode) = output else {
-            return Err(CallOtherHandleError::Other("invalid output".into()));
+            return Err(UnknownError::msg("invalid output").into());
         };
 
         let srr1 = cpu.space_manager().read(srr1_varnode).unwrap();

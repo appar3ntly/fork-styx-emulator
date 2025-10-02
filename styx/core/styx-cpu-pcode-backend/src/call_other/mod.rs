@@ -7,6 +7,7 @@ use crate::{
 use handlers::EmptyCallback;
 use log::{trace, warn};
 use std::{collections::HashMap, fmt::Debug, marker::PhantomData, str::FromStr};
+use styx_errors::UnknownError;
 use styx_pcode::{
     pcode::VarnodeData,
     sla::{SlaUserOps, UserOps},
@@ -20,7 +21,7 @@ pub mod handlers;
 #[derive(Error, Debug)]
 pub enum CallOtherHandleError {
     #[error("generic error: {0}")]
-    Other(#[from] Box<dyn std::error::Error + Send + Sync>),
+    Other(#[from] UnknownError),
 }
 
 #[derive(Error, Debug)]
