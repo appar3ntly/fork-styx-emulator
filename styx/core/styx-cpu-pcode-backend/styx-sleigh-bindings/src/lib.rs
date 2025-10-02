@@ -12,8 +12,12 @@
 //! Updating the sleigh sources is as simple as copying over the sources from
 //! `Ghidra/Features/Decompiler/src/decompile/cpp/` over to `sleigh/`.
 //!
-//! The only change made is the `main()` function in slgh_compile.cc name was
-//! changed to allow inclusion of the SleighCompile facilities.
+//! The only two changes made are:
+//! 1. The `main()` function in slgh_compile.cc name was
+//!    changed to allow inclusion of the SleighCompile facilities. Add
+//! 2. The `Sleigh::setContextVariableCached` method  was added to set
+//!    a context variable over the entire PC range and invalidating
+//!    the internal context variable cache.
 use cxx::CxxVector;
 
 /// Implement to act as a p-code emit for sleigh
