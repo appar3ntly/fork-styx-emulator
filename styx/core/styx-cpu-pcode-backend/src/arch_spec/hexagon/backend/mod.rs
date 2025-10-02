@@ -558,10 +558,9 @@ impl HexagonPcodeBackend {
         }
     }
     /// Indicate when we should update the context reg
-    /// and what the new value should be
+    /// and what the new value should be. See `SavedContextOpts::update_context`
+    /// for more details.
     pub fn update_context(&mut self, when: PacketLocation, what: ContextOption) {
-        // TODO: what to do when Now is set outside of prefetch?
-        // current functionality is to clear all unset now instructions out.
         self.saved_context_opts.update_context(when, what);
     }
 

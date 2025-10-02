@@ -75,6 +75,18 @@ impl SavedContextOpts {
 
     /// Allows the caller to indicate that a certain context option `what `should be set
     /// when execution reaches the point specified by `when`.
+    ///
+    /// NOTE: If when equals `PacketLocation::Now`, the context option will
+    /// take place for the current instruction _only if_ we are currently before
+    /// the point where the current instruction was fetched. See `HexagonExecutionHelper`
+    /// for more details on hooks that will call `update_context` through the cycle of
+    /// fetching and lifting to P-code.
+    ///
+    /// NOTE: If you call `update_context` _after_ the current instruction was fetched but before
+    /// the next instruction, this context option update will be ignored and not take effect for
+    /// any instruction. This is because `SavedContextOpts::advance_instr` clears out the context
+    /// options for `PacketLocation::Now`, and context options are only read out for each instruction
+    /// once, just before the instruction is lifted to P-codes by Sleigh.
     pub fn update_context(&mut self, when: PacketLocation, what: ContextOption) {
         match when {
             PacketLocation::Now => self.now.push(what),
