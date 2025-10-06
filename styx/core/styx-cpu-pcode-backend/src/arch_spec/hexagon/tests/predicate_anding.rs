@@ -19,8 +19,6 @@ fn test_reorder_anding(r0: u32, r1: u32, r2: u32, r3: u32) {
 "#,
     );
 
-    // TODO: use the test case thing to create a couple of cases
-    // where it doesn't pass and where it does
     cpu.write_register(HexagonRegister::R0, r0).unwrap();
     cpu.write_register(HexagonRegister::R1, r1).unwrap();
     cpu.write_register(HexagonRegister::R2, r2).unwrap();
