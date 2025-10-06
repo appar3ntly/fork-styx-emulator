@@ -329,6 +329,16 @@ impl HexagonExecutionHelper for DefaultHexagonExecutionHelper {
         trace!("3rd instruction is {:#010x}", insn_next1.raw_value());
         trace!("4th instruction is {:#010x}", insn_next2.raw_value());
 
+        // NOTE: all unreachable statements here are unreachable because
+        // the PktState::Standalone is "discarded" because standalone implies
+        // end of packet and one instruction. The parent function that calls this function,
+        // HexagonPcodeBackend::fetch_decode_packet, returns at the end of a packet
+        // and sets its initial state to PktState::EndOfPacket even if another PktState that indicates
+        // the end of a packet (like Standalone). In other words, PktState::Standalone is rewritten to
+        // PktState::EndOfPacket every time, so prev_state can never be Standalone.
+        //
+        // The duplex PktStates are handled above in the if matches! statement, so they will
+        // never make it to here.
         match parse_data {
             PktLoopParseBits::Duplex => match prev_state {
                 // Last instruction was the end of a packet and current instruction is the
