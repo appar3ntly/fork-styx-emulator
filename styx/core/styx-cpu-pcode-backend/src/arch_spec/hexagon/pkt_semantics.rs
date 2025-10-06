@@ -9,6 +9,8 @@ use crate::{
     PCodeStateChange,
 };
 
+// See the Hexagon slaspec for more details,
+// this constant is also defined there.
 pub const DEST_REG_OFFSET: u64 = 0x600;
 
 // For dotnew

@@ -6,9 +6,8 @@ use crate::arch_spec::hexagon::tests::*;
 fn verify_regpairs() {
     // make sure the mapping is acceptable by going through
     // the styx sla mapping and making sure they both align
-    // TODO: not clear how to do this, but maybe make sure that every
-    // regpair is mapped?? this may not be what we want if there are regpairs
-    // we intentionally haven't implemented yet.
+    //
+    // NOTE: potentially update this when we add HVX support
     styx_util::logging::init_logging();
     let re = Regex::new(r"[A-Z]*\d*").unwrap();
     for (k, v) in REGPAIR_MAP.iter() {

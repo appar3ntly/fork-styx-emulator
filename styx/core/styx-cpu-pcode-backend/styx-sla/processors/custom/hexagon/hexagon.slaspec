@@ -16,6 +16,7 @@ define endian=little;
 define alignment=2;
 define space ram      type=ram_space      size=4  default;
 define space register type=register_space size=4;
+define space styx_hexagon type=register_space size=4;
 
 @define DESTSTART 0x600
 

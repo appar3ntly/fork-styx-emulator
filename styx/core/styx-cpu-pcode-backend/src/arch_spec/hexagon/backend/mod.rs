@@ -696,6 +696,14 @@ impl HexagonPcodeBackend {
         let mut dotnew_total_insns = 0;
         let mut dotnew_regs_written = vec![];
         let mut all_regs_written = vec![];
+        // Used for predicate ANDing
+        let pred_start = self
+            .pcode_generator
+            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
+                HexagonRegister::P0,
+            )))
+            .expect("can't get p0 register as varnode")
+            .offset;
 
         // See table 2-1 for mapping Lr => R31. Used for tracking register outputs.
         let last_general_register = self
@@ -916,7 +924,7 @@ impl HexagonPcodeBackend {
                                 inputs: smallvec![
                                     VarnodeData {
                                         space: SpaceName::Register,
-                                        offset: DEST_REG_OFFSET + (*dotnew_regnum + 0x94),
+                                        offset: DEST_REG_OFFSET + (*dotnew_regnum + pred_start),
                                         size: 1,
                                     },
                                     VarnodeData {
@@ -927,7 +935,7 @@ impl HexagonPcodeBackend {
                                 ],
                                 output: Some(VarnodeData {
                                     space: SpaceName::Register,
-                                    offset: DEST_REG_OFFSET + (*dotnew_regnum + 0x94),
+                                    offset: DEST_REG_OFFSET + (*dotnew_regnum + pred_start),
                                     size: 1,
                                 }),
                             },
