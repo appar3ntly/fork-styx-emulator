@@ -20,7 +20,7 @@ use styx_errors::{
     styx_cpu::StyxCpuBackendError,
     UnknownError,
 };
-use styx_pcode::pcode::{AddressSpaceName, Opcode, Pcode, SpaceName, VarnodeData};
+use styx_pcode::pcode::{Opcode, Pcode, SpaceName, VarnodeData};
 use styx_pcode_translator::ContextOption;
 use styx_processor::{
     cpu::{CpuBackend, ExecutionReport, ReadRegisterError, WriteRegisterError},
@@ -28,7 +28,6 @@ use styx_processor::{
     hooks::{AddHookError, DeleteHookError, HookToken, Hookable, StyxHook},
     memory::Mmu,
 };
-use styx_sync::lazy_static;
 use thiserror::Error;
 
 use crate::execute_pcode;
@@ -541,7 +540,6 @@ impl HexagonPcodeBackend {
 
         let endian = pcode_generator.endian();
         let space_manager = backend_helper::build_space_manager(&pcode_generator);
-        // Create the styx_hexagon
 
         let arch_def: Box<dyn ArchitectureDef> = arch_variant.into();
 
