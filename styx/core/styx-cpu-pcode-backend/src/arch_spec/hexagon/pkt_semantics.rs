@@ -39,8 +39,6 @@ impl<T: CpuBackend> CallOtherCallback<T> for NewReg {
 
         // For now, since there are no packet semantics, we should just
         // use the previously set value.
-        //
-        // TODO: update when packet semantics come into play
         trace!("newreg varnode input is {input}");
 
         backend

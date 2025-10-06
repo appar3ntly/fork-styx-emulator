@@ -102,17 +102,3 @@ pub fn get_isa_pc(cpu: &mut HexagonPcodeBackend) -> u32 {
     trace!("get_isa_pc returns {pc:x}");
     pc
 }
-
-// TODO:
-// need to test load/stores (non dotnew) here
-//
-// also need something that tests the position of duplex instructions within a larger packet
-// VERY heavily.
-//
-// need some tests related to register pairs
-//
-// also need some real programs, compiled with clang
-// duplex imm test,
-// hwloop test, jump test
-// .new test, interrupt test??
-// later: test function calls

@@ -216,7 +216,7 @@ fn test_hwloop_inner() {
     let exit = cpu.execute(&mut mmu, &mut ev, 18).unwrap();
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
 
-    // TODO: need to check that the last packet sets context option for hexagonendloop, and
+    // NOTE: we could also check that the last packet sets context option for hexagonendloop, and
     // that their pcodes are only length 1 each.
 
     let r0 = cpu.read_register::<u32>(HexagonRegister::R0).unwrap();

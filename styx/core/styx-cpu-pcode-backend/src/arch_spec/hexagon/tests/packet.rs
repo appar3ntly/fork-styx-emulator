@@ -45,7 +45,6 @@ fn test_packet_instructions() {
 
     trace!("initial pc is {initial_isa_pc}, new pc is {end_isa_pc}");
 
-    // TODO: test pc increment at end of packet
     assert_eq!(end_isa_pc - initial_isa_pc, 12);
 }
 

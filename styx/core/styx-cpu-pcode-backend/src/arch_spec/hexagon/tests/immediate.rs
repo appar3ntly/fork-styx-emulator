@@ -20,8 +20,6 @@ fn test_immediates() {
     // We'll have two instructions for each immext, and then the second instruction
     // doesn't have an immediate _extension_ so we're good on that end, total
     // 5 instructions
-    // TODO: does immext need to be set to 0xffffffff every cycle?
-    // it doesn't seem like it..
     let exit = cpu.execute(&mut mmu, &mut ev, 4).unwrap();
 
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
@@ -45,8 +43,6 @@ fn test_immediate_instruction() {
     const R0VAL: u32 = 21;
     let (mut cpu, mut mmu, mut ev) = setup_asm(&format!("{{ r1 = add(r0, #{WRITTEN}); }}"), None);
     cpu.write_register(HexagonRegister::R0, R0VAL).unwrap();
-
-    // TODO: how should the ISA PC respond to immext?
 
     // We'll have two instructions for immext
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
