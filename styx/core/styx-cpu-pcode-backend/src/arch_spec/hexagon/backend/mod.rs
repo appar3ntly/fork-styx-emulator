@@ -913,10 +913,7 @@ impl HexagonPcodeBackend {
             let mut predicates_found = [false, false, false, false];
             for i in &ordering {
                 let first_general_reg = &all_regs_written[*i];
-                trace!(
-                    "general reg in this instruction written was {:?}",
-                    first_general_reg
-                );
+                trace!("general reg in this instruction written was {first_general_reg:?}",);
                 if let OutputRegisterType::Predicate(dotnew_regnum, ins_loc) = &first_general_reg {
                     trace!(
                         "all_regs_written {all_regs_written:?} first_general_reg {first_general_reg:?} predicates_found {predicates_found:?}"
