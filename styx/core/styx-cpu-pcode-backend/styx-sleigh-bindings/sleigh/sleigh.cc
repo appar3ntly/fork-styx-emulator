@@ -658,6 +658,9 @@ void Sleigh::resolve(ParserContext &pos) const
   pos.setParserState(ParserContext::disassembly);
 }
 
+/// This method sets a context variable for a specified address range
+/// and also ensures that the context variable change invalidates the
+/// context variable cache to ensure use of the new value.
 void Sleigh::setContextVariableCached(const string &nm,const Address &addrLo,
 					const Address &addrHi, uintm value)
 {
