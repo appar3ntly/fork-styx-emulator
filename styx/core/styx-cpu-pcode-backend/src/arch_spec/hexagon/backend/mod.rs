@@ -68,14 +68,24 @@ pub enum HexagonFetchDecodeError {
     Other(#[from] UnknownError),
 }
 
+/// For use during fetching/decoding a full packet. Holds state of
+/// where the Pcode backend is currently within a packet
+/// while fetching/decoding a full packet.
 #[derive(PartialEq, Debug)]
 pub enum PktState {
+    /// The start of a packet
     PktStarted([GeneralHexagonInstruction; 4]),
+    /// A packet with one instruction. Implicitly means end of packet reached.
     PktStandalone([GeneralHexagonInstruction; 4]),
+    /// In the middle of the packet
     InsidePacket([GeneralHexagonInstruction; 4]),
+    /// A packet that has a duplex, but other instructions as well. For example,
+    /// `{ r0 = r1; r1 = r0; if (p0) r6 = add(r2, r3); }`.
     FirstDuplex([GeneralHexagonInstruction; 4]),
+    /// If the packet solely has one duplex and we're at the first instruction in the duplex.
+    /// For example: `{ r0 = r1; r1 = r0; }`
     PktStartedFirstDuplex([GeneralHexagonInstruction; 4]),
-    // A duplex instruction would not want to give this information
+    /// A duplex instruction would not want to give this information
     PktEnded(Option<GeneralHexagonInstruction>),
 }
 
