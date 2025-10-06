@@ -20,7 +20,7 @@ use styx_errors::{
     styx_cpu::StyxCpuBackendError,
     UnknownError,
 };
-use styx_pcode::pcode::{Opcode, Pcode, SpaceName, VarnodeData};
+use styx_pcode::pcode::{AddressSpaceName, Opcode, Pcode, SpaceName, VarnodeData};
 use styx_pcode_translator::ContextOption;
 use styx_processor::{
     cpu::{CpuBackend, ExecutionReport, ReadRegisterError, WriteRegisterError},
@@ -28,6 +28,7 @@ use styx_processor::{
     hooks::{AddHookError, DeleteHookError, HookToken, Hookable, StyxHook},
     memory::Mmu,
 };
+use styx_sync::lazy_static;
 use thiserror::Error;
 
 use crate::execute_pcode;
@@ -57,8 +58,13 @@ use derive_more::Debug;
 
 mod decode_info;
 mod execution_helper;
-
 mod saved_context_opts;
+
+lazy_static! {
+    static ref STYX_HEXAGON_CUSTOM_SPACE: SpaceName =
+        SpaceName::Other(AddressSpaceName::ReferenceCounted("styx_hexagon".into()));
+}
+const HEXAGON_PREDICATE_AND_COPY_LOC: u64 = 0x20000000u64;
 
 #[derive(Error, Debug)]
 pub enum HexagonFetchDecodeError {
@@ -153,6 +159,11 @@ pub struct HexagonPcodeBackend {
     // State for context saved/restored
     saved_reg_context: BTreeMap<ArchRegister, RegisterValue>,
     saved_execution_helper: Option<DefaultHexagonExecutionHelper>,
+
+    // Used for predicate register manipulation (especially in predicate ANDing and detecting when to reorder instructions in packets),
+    // this is the offset from the register space start to the first predicate register
+    hexagon_predicate_start: u64,
+    hexagon_predicate_end: u64,
 }
 
 impl Hookable for HexagonPcodeBackend {
@@ -298,8 +309,6 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             let pcode_instrs = &pcodes[fetch_decode_info.ordering[i]];
             trace!("executing single instruction pcodes: {pcode_instrs:?}");
             // this should actually do the fetching for each individual packet.
-            // TODO: move everything that happens within one one execution. call this function something else,
-            // like execute_packet_pcodes or something?
             match self.execute_single_instr(
                 pcode_instrs,
                 mmu,
@@ -548,6 +557,20 @@ impl HexagonPcodeBackend {
 
         let execution_helper = DefaultHexagonExecutionHelper::default();
 
+        // Used for predicate ANDing
+        let hexagon_predicate_start = pcode_generator
+            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
+                HexagonRegister::P0,
+            )))
+            .expect("can't get p0 register as varnode")
+            .offset;
+        let hexagon_predicate_end = pcode_generator
+            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
+                HexagonRegister::P3,
+            )))
+            .expect("can't get p0 register as varnode")
+            .offset;
+
         Self {
             saved_context_opts: SavedContextOpts::default(),
             regs_written: Vec::with_capacity(10),
@@ -565,6 +588,8 @@ impl HexagonPcodeBackend {
             last_was_branch: false,
             call_other_manager: Some(call_other),
             saved_reg_context: BTreeMap::new(),
+            hexagon_predicate_start,
+            hexagon_predicate_end,
         }
     }
     /// Indicate when we should update the context reg
@@ -696,14 +721,6 @@ impl HexagonPcodeBackend {
         let mut dotnew_total_insns = 0;
         let mut dotnew_regs_written = vec![];
         let mut all_regs_written = vec![];
-        // Used for predicate ANDing
-        let pred_start = self
-            .pcode_generator
-            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
-                HexagonRegister::P0,
-            )))
-            .expect("can't get p0 register as varnode")
-            .offset;
 
         // See table 2-1 for mapping Lr => R31. Used for tracking register outputs.
         let last_general_register = self
@@ -910,7 +927,10 @@ impl HexagonPcodeBackend {
                     // This dotnew value was already set.
                     if predicates_found[*dotnew_regnum as usize] {
                         trace!("Predicate anding situation detected at {i}!");
-                        const UNIQ_LOC: u64 = 0x20000000u64;
+                        // A predicate to be ANDed copied into a custom unique varnode space that won't overlap/conflict
+                        // with any other space. This space is called "styx_hexagon" in the slaspec and
+                        // the location is given by the constant HEXAGON_PREDICATE_AND_COPY_LOC.
+                        //
                         // We must push this immediately after the instruction that outputs to the predicat,
                         // mainly because there are *fun* instructions like p0 = cmp.eq(...); if (p0.new) ...
                         // where the compare and jump happen in the same instruction
@@ -924,18 +944,20 @@ impl HexagonPcodeBackend {
                                 inputs: smallvec![
                                     VarnodeData {
                                         space: SpaceName::Register,
-                                        offset: DEST_REG_OFFSET + (*dotnew_regnum + pred_start),
+                                        offset: DEST_REG_OFFSET
+                                            + (*dotnew_regnum + self.hexagon_predicate_start),
                                         size: 1,
                                     },
                                     VarnodeData {
-                                        space: SpaceName::Unique,
-                                        offset: UNIQ_LOC,
+                                        space: STYX_HEXAGON_CUSTOM_SPACE.clone(),
+                                        offset: HEXAGON_PREDICATE_AND_COPY_LOC,
                                         size: 1
                                     }
                                 ],
                                 output: Some(VarnodeData {
                                     space: SpaceName::Register,
-                                    offset: DEST_REG_OFFSET + (*dotnew_regnum + pred_start),
+                                    offset: DEST_REG_OFFSET
+                                        + (*dotnew_regnum + self.hexagon_predicate_start),
                                     size: 1,
                                 }),
                             },
@@ -948,14 +970,15 @@ impl HexagonPcodeBackend {
                                 opcode: Opcode::Copy,
                                 inputs: smallvec![VarnodeData {
                                     space: SpaceName::Register,
-                                    offset: DEST_REG_OFFSET + (*dotnew_regnum + 0x94),
+                                    offset: DEST_REG_OFFSET
+                                        + (*dotnew_regnum + self.hexagon_predicate_start),
                                     size: 1
                                 }],
                                 // WARN: is there an issue here with the unique space somehow overlapping?
                                 // WARN: is this too big?
                                 output: Some(VarnodeData {
-                                    space: SpaceName::Unique,
-                                    offset: UNIQ_LOC,
+                                    space: STYX_HEXAGON_CUSTOM_SPACE.clone(),
+                                    offset: HEXAGON_PREDICATE_AND_COPY_LOC,
                                     size: 1,
                                 }),
                             },

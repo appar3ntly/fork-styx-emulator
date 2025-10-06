@@ -193,22 +193,6 @@ impl DefaultHexagonExecutionHelper {
         // NOTE: this assumes that the four predicate registers are contiguous in
         // the register space, but this should hold true as the four predicate registers
         // comprise one larger control register C4 (see table 2-2).
-        //
-        // We unwrap since something is seriously wrong if we can't access these values.
-        let pred_start = backend
-            .pcode_generator
-            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
-                HexagonRegister::P0,
-            )))
-            .expect("can't get p0 register as varnode")
-            .offset;
-        let pred_end = backend
-            .pcode_generator
-            .get_register(&ArchRegister::Basic(BasicArchRegister::Hexagon(
-                HexagonRegister::P3,
-            )))
-            .expect("can't get p0 register as varnode")
-            .offset;
 
         // This is because we want make some edits on a copy of this value
         let mut reg_offset = reg_offset;
@@ -217,11 +201,17 @@ impl DefaultHexagonExecutionHelper {
             reg_offset -= DEST_REG_OFFSET;
         }
 
-        trace!("reg_offset is {reg_offset}, pred_start is {pred_start}, pred_end is {pred_end}");
+        trace!(
+            "reg_offset is {reg_offset}, pred_start is {}, pred_end is {}",
+            backend.hexagon_predicate_start,
+            backend.hexagon_predicate_end
+        );
 
-        if reg_offset >= pred_start && reg_offset <= pred_end {
-            trace!("returning {}", reg_offset - pred_start);
-            Some((reg_offset - pred_start) as usize)
+        if reg_offset >= backend.hexagon_predicate_start
+            && reg_offset <= backend.hexagon_predicate_start
+        {
+            trace!("returning {}", reg_offset - backend.hexagon_predicate_start);
+            Some((reg_offset - backend.hexagon_predicate_start) as usize)
         } else {
             trace!("not returning anything");
             None
