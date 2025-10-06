@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 use log::trace;
-use styx_cpu_type::arch::{
-    backends::{ArchRegister, BasicArchRegister},
-    hexagon::HexagonRegister,
-};
+use styx_cpu_type::arch::hexagon::HexagonRegister;
 use styx_errors::anyhow::Context;
 use styx_pcode::pcode::{Opcode, Pcode, SpaceName, VarnodeData};
 use styx_pcode_translator::ContextOption;
@@ -24,7 +21,7 @@ use crate::{
     },
     execute_pcode::PcodeHelpers,
     memory::sized_value::SizedValue,
-    pcode_gen::{GeneratePcodeError, RegisterTranslator},
+    pcode_gen::GeneratePcodeError,
     register_manager::RegisterManager,
 };
 
@@ -208,7 +205,7 @@ impl DefaultHexagonExecutionHelper {
         );
 
         if reg_offset >= backend.hexagon_predicate_start
-            && reg_offset <= backend.hexagon_predicate_start
+            && reg_offset <= backend.hexagon_predicate_end
         {
             trace!("returning {}", reg_offset - backend.hexagon_predicate_start);
             Some((reg_offset - backend.hexagon_predicate_start) as usize)

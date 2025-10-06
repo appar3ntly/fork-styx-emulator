@@ -60,12 +60,6 @@ mod decode_info;
 mod execution_helper;
 mod saved_context_opts;
 
-lazy_static! {
-    static ref STYX_HEXAGON_CUSTOM_SPACE: SpaceName =
-        SpaceName::Other(AddressSpaceName::ReferenceCounted("styx_hexagon".into()));
-}
-const HEXAGON_PREDICATE_AND_COPY_LOC: u64 = 0x20000000u64;
-
 #[derive(Error, Debug)]
 pub enum HexagonFetchDecodeError {
     #[error(transparent)]
@@ -547,6 +541,7 @@ impl HexagonPcodeBackend {
 
         let endian = pcode_generator.endian();
         let space_manager = backend_helper::build_space_manager(&pcode_generator);
+        // Create the styx_hexagon
 
         let arch_def: Box<dyn ArchitectureDef> = arch_variant.into();
 
@@ -920,6 +915,10 @@ impl HexagonPcodeBackend {
             let mut predicates_found = [false, false, false, false];
             for i in &ordering {
                 let first_general_reg = &all_regs_written[*i];
+                trace!(
+                    "general reg in this instruction written was {:?}",
+                    first_general_reg
+                );
                 if let OutputRegisterType::Predicate(dotnew_regnum, ins_loc) = &first_general_reg {
                     trace!(
                         "all_regs_written {all_regs_written:?} first_general_reg {first_general_reg:?} predicates_found {predicates_found:?}"
@@ -934,6 +933,7 @@ impl HexagonPcodeBackend {
                         // We must push this immediately after the instruction that outputs to the predicat,
                         // mainly because there are *fun* instructions like p0 = cmp.eq(...); if (p0.new) ...
                         // where the compare and jump happen in the same instruction
+                        const HEXAGON_PREDICATE_AND_COPY_LOC: u64 = 0x20000000u64;
 
                         // Also, this kind of assumes that the predicate register is either 0x00 or 0xff, and
                         // nothing else.
@@ -949,7 +949,7 @@ impl HexagonPcodeBackend {
                                         size: 1,
                                     },
                                     VarnodeData {
-                                        space: STYX_HEXAGON_CUSTOM_SPACE.clone(),
+                                        space: SpaceName::from("styx_hexagon"),
                                         offset: HEXAGON_PREDICATE_AND_COPY_LOC,
                                         size: 1
                                     }
@@ -977,7 +977,7 @@ impl HexagonPcodeBackend {
                                 // WARN: is there an issue here with the unique space somehow overlapping?
                                 // WARN: is this too big?
                                 output: Some(VarnodeData {
-                                    space: STYX_HEXAGON_CUSTOM_SPACE.clone(),
+                                    space: SpaceName::from("styx_hexagon"),
                                     offset: HEXAGON_PREDICATE_AND_COPY_LOC,
                                     size: 1,
                                 }),
