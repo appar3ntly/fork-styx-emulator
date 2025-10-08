@@ -109,11 +109,11 @@ lazy_static! {
             ),
             (
                 HexagonRegister::S11S10,
-                (HexagonRegister::S11, HexagonRegister::Imask)
+                (HexagonRegister::Gevb, HexagonRegister::Imask)
             ),
             (
                 HexagonRegister::S13S12,
-                (HexagonRegister::S13, HexagonRegister::S12)
+                (HexagonRegister::S13, HexagonRegister::VwCtrl)
             ),
             (
                 HexagonRegister::S15S14,
@@ -125,19 +125,19 @@ lazy_static! {
             ),
             (
                 HexagonRegister::S19S18,
-                (HexagonRegister::S19, HexagonRegister::SysCfg)
+                (HexagonRegister::Segment, HexagonRegister::SysCfg)
             ),
             (
                 HexagonRegister::S21S20,
-                (HexagonRegister::Vid, HexagonRegister::S20)
+                (HexagonRegister::Vid, HexagonRegister::Ipendad)
             ),
             (
                 HexagonRegister::S23S22,
-                (HexagonRegister::S23, HexagonRegister::S22)
+                (HexagonRegister::BestWait, HexagonRegister::Vid1)
             ),
             (
                 HexagonRegister::S25S24,
-                (HexagonRegister::S25, HexagonRegister::S24)
+                (HexagonRegister::SchedCfg, HexagonRegister::S24)
             ),
             (
                 HexagonRegister::S27S26,
@@ -148,7 +148,7 @@ lazy_static! {
                 (HexagonRegister::Rev, HexagonRegister::Diag)
             ),
             (
-                HexagonRegister::S31S30,
+                HexagonRegister::Pcycle,
                 (HexagonRegister::PcycleHi, HexagonRegister::PcycleLo)
             ),
             (
@@ -157,7 +157,7 @@ lazy_static! {
             ),
             (
                 HexagonRegister::S35S34,
-                (HexagonRegister::S35, HexagonRegister::IsdbCfg1)
+                (HexagonRegister::Livelock, HexagonRegister::IsdbCfg1)
             ),
             (
                 HexagonRegister::S37S36,
@@ -177,11 +177,11 @@ lazy_static! {
             ),
             (
                 HexagonRegister::S45S44,
-                (HexagonRegister::S45, HexagonRegister::S44)
+                (HexagonRegister::PmuCnt5, HexagonRegister::PmuCnt4)
             ),
             (
                 HexagonRegister::S47S46,
-                (HexagonRegister::S47, HexagonRegister::S46)
+                (HexagonRegister::PmuCnt7, HexagonRegister::PmuCnt6)
             ),
             (
                 HexagonRegister::S49S48,
@@ -193,31 +193,31 @@ lazy_static! {
             ),
             (
                 HexagonRegister::S53S52,
-                (HexagonRegister::PmuCfg, HexagonRegister::PmuEvtCfg)
+                (HexagonRegister::PmuStId0, HexagonRegister::PmuEvtCfg)
             ),
             (
                 HexagonRegister::S55S54,
-                (HexagonRegister::S55, HexagonRegister::S54)
+                (HexagonRegister::PmuStId1, HexagonRegister::PmuEvtCfg1)
             ),
             (
-                HexagonRegister::S57S56,
-                (HexagonRegister::S57, HexagonRegister::S56)
+                HexagonRegister::Timer,
+                (HexagonRegister::TimerHi, HexagonRegister::TimerLo)
             ),
             (
                 HexagonRegister::S59S58,
-                (HexagonRegister::S59, HexagonRegister::S58)
+                (HexagonRegister::Rgdr2, HexagonRegister::PmuCfg)
             ),
             (
                 HexagonRegister::S61S60,
-                (HexagonRegister::S61, HexagonRegister::S60)
+                (HexagonRegister::Turkey, HexagonRegister::Rgdr)
             ),
             (
                 HexagonRegister::S63S62,
-                (HexagonRegister::S63, HexagonRegister::S62)
+                (HexagonRegister::Chicken, HexagonRegister::Duck)
             ),
             (
                 HexagonRegister::S65S64,
-                (HexagonRegister::S65, HexagonRegister::S64)
+                (HexagonRegister::S65, HexagonRegister::Commit1t)
             ),
             (
                 HexagonRegister::S67S66,
@@ -253,31 +253,31 @@ lazy_static! {
             ),
             (
                 HexagonRegister::G3G2,
-                (HexagonRegister::G3, HexagonRegister::Gosp)
+                (HexagonRegister::GbadVa, HexagonRegister::Gosp)
             ),
             (
                 HexagonRegister::G5G4,
-                (HexagonRegister::G5, HexagonRegister::G4)
+                (HexagonRegister::Gcommit2t, HexagonRegister::Gcommit1t)
             ),
             (
                 HexagonRegister::G7G6,
-                (HexagonRegister::G7, HexagonRegister::G6)
+                (HexagonRegister::Gcommit4t, HexagonRegister::Gcommit3t)
             ),
             (
                 HexagonRegister::G9G8,
-                (HexagonRegister::G9, HexagonRegister::G8)
+                (HexagonRegister::Gcommit6t, HexagonRegister::Gcommit5t)
             ),
             (
                 HexagonRegister::G11G10,
-                (HexagonRegister::G11, HexagonRegister::G10)
+                (HexagonRegister::Gpcycle2t, HexagonRegister::Gpcycle1t)
             ),
             (
                 HexagonRegister::G13G12,
-                (HexagonRegister::G13, HexagonRegister::G12)
+                (HexagonRegister::Gpcycle4t, HexagonRegister::Gpcycle3t)
             ),
             (
                 HexagonRegister::G15G14,
-                (HexagonRegister::G15, HexagonRegister::G14)
+                (HexagonRegister::Gpcycle6t, HexagonRegister::Gpcycle5t)
             ),
             (
                 HexagonRegister::G17G16,
@@ -289,11 +289,11 @@ lazy_static! {
             ),
             (
                 HexagonRegister::G21G20,
-                (HexagonRegister::G21, HexagonRegister::G20)
+                (HexagonRegister::Gcommit8t, HexagonRegister::Gcommit7t)
             ),
             (
                 HexagonRegister::G23G22,
-                (HexagonRegister::G23, HexagonRegister::G22)
+                (HexagonRegister::Gpcycle8t, HexagonRegister::Gpcycle7t)
             ),
             (
                 HexagonRegister::G25G24,

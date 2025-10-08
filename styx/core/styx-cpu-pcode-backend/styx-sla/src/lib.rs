@@ -567,17 +567,22 @@ mod hexagon {
             HexagonRegister::Htid => "S8",
             HexagonRegister::BadVa => "S9",
             HexagonRegister::Imask => "S10",
-            HexagonRegister::S11 => "S11",
-            HexagonRegister::S12 => "S12",
+            HexagonRegister::Gevb => "S11",
+            HexagonRegister::VwCtrl => "S12",
             HexagonRegister::S13 => "S13",
             HexagonRegister::S14 => "S14",
             HexagonRegister::S15 => "S15",
             HexagonRegister::Evb => "S16",
             HexagonRegister::ModeCtl => "S17",
             HexagonRegister::SysCfg => "S18",
-            HexagonRegister::S19 => "S19",
-            HexagonRegister::S20 => "S20",
+            HexagonRegister::Segment => "S19",
+            HexagonRegister::Ipendad => "S20",
             HexagonRegister::Vid => "S21",
+            HexagonRegister::Vid1 => "S22",
+            HexagonRegister::BestWait => "S23",
+            HexagonRegister::S24 => "S24",
+            HexagonRegister::SchedCfg => "S25",
+            HexagonRegister::S26 => "S26",
             HexagonRegister::CfgBase => "S27",
             HexagonRegister::Diag => "S28",
             HexagonRegister::Rev => "S29",
@@ -586,7 +591,7 @@ mod hexagon {
             HexagonRegister::IsdbSt => "S32",
             HexagonRegister::IsdbCfg0 => "S33",
             HexagonRegister::IsdbCfg1 => "S34",
-            HexagonRegister::S35 => "S35",
+            HexagonRegister::Livelock => "S35",
             HexagonRegister::BrkptPc0 => "S36",
             HexagonRegister::BrkptCfg0 => "S37",
             HexagonRegister::BrkptPc1 => "S38",
@@ -595,17 +600,30 @@ mod hexagon {
             HexagonRegister::IsdbMbxOut => "S41",
             HexagonRegister::IsdbEn => "S42",
             HexagonRegister::IsdbGpr => "S43",
-            HexagonRegister::S44 => "S44",
-            HexagonRegister::S45 => "S45",
-            HexagonRegister::S46 => "S46",
-            HexagonRegister::S47 => "S47",
+            HexagonRegister::PmuCnt4 => "S44",
+            HexagonRegister::PmuCnt5 => "S45",
+            HexagonRegister::PmuCnt6 => "S46",
+            HexagonRegister::PmuCnt7 => "S47",
             HexagonRegister::PmuCnt0 => "S48",
             HexagonRegister::PmuCnt1 => "S49",
             HexagonRegister::PmuCnt2 => "S50",
             HexagonRegister::PmuCnt3 => "S51",
             HexagonRegister::PmuEvtCfg => "S52",
-            HexagonRegister::PmuCfg => "S53",
+            HexagonRegister::PmuStId0 => "S53",
+            HexagonRegister::PmuEvtCfg1 => "S54",
+            HexagonRegister::PmuStId1 => "S55",
+            HexagonRegister::TimerLo => "S56",
+            HexagonRegister::TimerHi => "S57",
+            HexagonRegister::PmuCfg => "S58",
+            HexagonRegister::Rgdr2 => "S59",
+            HexagonRegister::Rgdr => "S60",
+            HexagonRegister::Turkey => "S61",
+            HexagonRegister::Duck => "S62",
+            HexagonRegister::Chicken => "S63",
+            HexagonRegister::Commit1t => "S64",
             HexagonRegister::SGP1SGP0 => "SGP1SGP0",
+            HexagonRegister::Timer => "S57S56",
+            HexagonRegister::Pcycle => "S31S30",
             HexagonRegister::S3S2
             | HexagonRegister::S5S4
             | HexagonRegister::S7S6
@@ -620,7 +638,6 @@ mod hexagon {
             | HexagonRegister::S25S24
             | HexagonRegister::S27S26
             | HexagonRegister::S29S28
-            | HexagonRegister::S31S30
             | HexagonRegister::S33S32
             | HexagonRegister::S35S34
             | HexagonRegister::S37S36
@@ -633,7 +650,6 @@ mod hexagon {
             | HexagonRegister::S51S50
             | HexagonRegister::S53S52
             | HexagonRegister::S55S54
-            | HexagonRegister::S57S56
             | HexagonRegister::S59S58
             | HexagonRegister::S61S60
             | HexagonRegister::S63S62
@@ -645,18 +661,7 @@ mod hexagon {
             | HexagonRegister::S75S74
             | HexagonRegister::S77S76
             | HexagonRegister::S79S78 => default_name,
-            HexagonRegister::S54
-            | HexagonRegister::S55
-            | HexagonRegister::S56
-            | HexagonRegister::S57
-            | HexagonRegister::S58
-            | HexagonRegister::S59
-            | HexagonRegister::S60
-            | HexagonRegister::S61
-            | HexagonRegister::S62
-            | HexagonRegister::S63
-            | HexagonRegister::S64
-            | HexagonRegister::S65
+            HexagonRegister::S65
             | HexagonRegister::S66
             | HexagonRegister::S67
             | HexagonRegister::S68
@@ -675,23 +680,27 @@ mod hexagon {
             HexagonRegister::Gelr => "G0",
             HexagonRegister::Gsr => "G1",
             HexagonRegister::Gosp => "G2",
-            HexagonRegister::G3
-            | HexagonRegister::G4
-            | HexagonRegister::G5
-            | HexagonRegister::G6
-            | HexagonRegister::G7
-            | HexagonRegister::G8
-            | HexagonRegister::G9
-            | HexagonRegister::G10
-            | HexagonRegister::G11
-            | HexagonRegister::G12
-            | HexagonRegister::G13
-            | HexagonRegister::G14
-            | HexagonRegister::G15 => default_name,
+            HexagonRegister::GbadVa => "G3",
+            HexagonRegister::Gcommit1t => "G4",
+            HexagonRegister::Gcommit2t => "G5",
+            HexagonRegister::Gcommit3t => "G6",
+            HexagonRegister::Gcommit4t => "G7",
+            HexagonRegister::Gcommit5t => "G8",
+            HexagonRegister::Gcommit6t => "G9",
+            HexagonRegister::Gpcycle1t => "G10",
+            HexagonRegister::Gpcycle2t => "G11",
+            HexagonRegister::Gpcycle3t => "G12",
+            HexagonRegister::Gpcycle4t => "G13",
+            HexagonRegister::Gpcycle5t => "G14",
+            HexagonRegister::Gpcycle6t => "G15",
             HexagonRegister::Gpmucnt4 => "G16",
             HexagonRegister::Gpmucnt5 => "G17",
             HexagonRegister::Gpmucnt6 => "G18",
             HexagonRegister::Gpmucnt7 => "G19",
+            HexagonRegister::Gcommit7t => "G20",
+            HexagonRegister::Gcommit8t => "G21",
+            HexagonRegister::Gpcycle7t => "G22",
+            HexagonRegister::Gpcycle8t => "G23",
             HexagonRegister::Gpcyclelo => "G24",
             HexagonRegister::Gpcyclehi => "G25",
             HexagonRegister::Gpmucnt0 => "G26",

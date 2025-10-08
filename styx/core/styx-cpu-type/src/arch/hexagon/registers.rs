@@ -127,32 +127,32 @@ create_basic_register_enums!(
     (Utimer, 64),   // Alias to C31C30
     // Skipping HVX extensions for now
     // System registers
-    (Sgp0, 32),    // S0
-    (Sgp1, 32),    // S1
-    (Stid, 32),    // S2
-    (Elr, 32),     // S3
-    (BadVa0, 32),  // S4
-    (BadVa1, 32),  // S5
-    (Ssr, 32),     // S6
-    (Ccr, 32),     // S7
-    (Htid, 32),    // S8
-    (BadVa, 32),   // S9
-    (Imask, 32),   // S10
-    (S11, 32),     // S11
-    (S12, 32),     // S12
-    (S13, 32),     // S13
-    (S14, 32),     // S14
-    (S15, 32),     // S15
-    (Evb, 32),     // S16
-    (ModeCtl, 32), // S17
-    (SysCfg, 32),  // S18
-    (S19, 32),     // S19
-    (S20, 32),     // S20
-    (Vid, 32),     // S21
-    (S22, 32),
-    (S23, 32),
-    (S24, 32),
-    (S25, 32),
+    (Sgp0, 32),     // S0
+    (Sgp1, 32),     // S1
+    (Stid, 32),     // S2
+    (Elr, 32),      // S3
+    (BadVa0, 32),   // S4
+    (BadVa1, 32),   // S5
+    (Ssr, 32),      // S6
+    (Ccr, 32),      // S7
+    (Htid, 32),     // S8
+    (BadVa, 32),    // S9
+    (Imask, 32),    // S10
+    (Gevb, 32),     // S11
+    (VwCtrl, 32),   // S12
+    (S13, 32),      // S13
+    (S14, 32),      // S14
+    (S15, 32),      // S15
+    (Evb, 32),      // S16
+    (ModeCtl, 32),  // S17
+    (SysCfg, 32),   // S18
+    (Segment, 32),  // S19
+    (Ipendad, 32),  // S20
+    (Vid, 32),      // S21
+    (Vid1, 32),     // S22
+    (BestWait, 32), // S23
+    (S24, 32),      // S24
+    (SchedCfg, 32), // S25
     (S26, 32),
     (CfgBase, 32),    // S27
     (Diag, 32),       // S28
@@ -162,7 +162,7 @@ create_basic_register_enums!(
     (IsdbSt, 32),     // S32
     (IsdbCfg0, 32),   // S33
     (IsdbCfg1, 32),   // S34
-    (S35, 32),        // S35
+    (Livelock, 32),   // S35
     (BrkptPc0, 32),   // S36
     (BrkptCfg0, 32),  // S37
     (BrkptPc1, 32),   // S38
@@ -171,27 +171,27 @@ create_basic_register_enums!(
     (IsdbMbxOut, 32), // S41
     (IsdbEn, 32),     // S42
     (IsdbGpr, 32),    // S43
-    (S44, 32),        // S44
-    (S45, 32),        // S45
-    (S46, 32),        // S46
-    (S47, 32),        // S47
+    (PmuCnt4, 32),    // S44
+    (PmuCnt5, 32),    // S45
+    (PmuCnt6, 32),    // S46
+    (PmuCnt7, 32),    // S47
     (PmuCnt0, 32),    // S48
     (PmuCnt1, 32),    // S49
     (PmuCnt2, 32),    // S50
     (PmuCnt3, 32),    // S51
     (PmuEvtCfg, 32),  // S52
-    (PmuCfg, 32),     // S53
-    (S54, 32),        // S54
-    (S55, 32),        // S55
-    (S56, 32),        // S56
-    (S57, 32),        // S57
-    (S58, 32),        // S58
-    (S59, 32),        // S59
-    (S60, 32),        // S60
-    (S61, 32),        // S61
-    (S62, 32),        // S62
-    (S63, 32),        // S63
-    (S64, 32),        // S64
+    (PmuStId0, 32),   // S53
+    (PmuEvtCfg1, 32), // S54
+    (PmuStId1, 32),   // S55
+    (TimerLo, 32),    // S56
+    (TimerHi, 32),    // S57
+    (PmuCfg, 32),     // S58
+    (Rgdr2, 32),      // S59
+    (Rgdr, 32),       // S60
+    (Turkey, 32),     // S61
+    (Duck, 32),       // S62
+    (Chicken, 32),    // S63
+    (Commit1t, 32),   // S64
     (S65, 32),        // S65
     (S66, 32),        // S66
     (S67, 32),        // S67
@@ -224,7 +224,7 @@ create_basic_register_enums!(
     (S25S24, 64),
     (S27S26, 64),
     (S29S28, 64),
-    (S31S30, 64),
+    (Pcycle, 64), // S31S30
     (S33S32, 64),
     (S35S34, 64),
     (S37S36, 64),
@@ -237,7 +237,7 @@ create_basic_register_enums!(
     (S51S50, 64),
     (S53S52, 64),
     (S55S54, 64),
-    (S57S56, 64),
+    (Timer, 64), // S57S56
     (S59S58, 64),
     (S61S60, 64),
     (S63S62, 64),
@@ -253,27 +253,27 @@ create_basic_register_enums!(
     (Gelr, 32),      // G0
     (Gsr, 32),       // G1
     (Gosp, 32),      // G2
-    (G3, 32),        // G3
-    (G4, 32),        // G4
-    (G5, 32),        // G5
-    (G6, 32),        // G6
-    (G7, 32),        // G7
-    (G8, 32),        // G8
-    (G9, 32),        // G9
-    (G10, 32),       // G10
-    (G11, 32),       // G11
-    (G12, 32),       // G12
-    (G13, 32),       // G13
-    (G14, 32),       // G14
-    (G15, 32),       // G15
+    (GbadVa, 32),    // G3
+    (Gcommit1t, 32), // G4
+    (Gcommit2t, 32), // G5
+    (Gcommit3t, 32), // G6
+    (Gcommit4t, 32), // G7
+    (Gcommit5t, 32), // G8
+    (Gcommit6t, 32), // G9
+    (Gpcycle1t, 32), // G10
+    (Gpcycle2t, 32), // G11
+    (Gpcycle3t, 32), // G12
+    (Gpcycle4t, 32), // G13
+    (Gpcycle5t, 32), // G14
+    (Gpcycle6t, 32), // G15
     (Gpmucnt4, 32),  // G16
     (Gpmucnt5, 32),  // G17
     (Gpmucnt6, 32),  // G18
     (Gpmucnt7, 32),  // G19
-    (G20, 32),       // G20
-    (G21, 32),       // G21
-    (G22, 32),       // G22
-    (G23, 32),       // G23
+    (Gcommit7t, 32), // G20
+    (Gcommit8t, 32), // G21
+    (Gpcycle7t, 32), // G22
+    (Gpcycle8t, 32), // G23
     (Gpcyclelo, 32), // G24
     (Gpcyclehi, 32), // G25
     (Gpmucnt0, 32),  // G26
