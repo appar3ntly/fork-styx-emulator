@@ -19,6 +19,30 @@ use styx_processor::memory::{MemoryOperation, MemoryType, Mmu, MmuOpError};
 use thiserror::Error;
 use vector_map::VecMap;
 
+/// Simple wrapper trait that requires a `CpuBackend` to have some extra
+/// traits that are used over the course of various `SpaceManager` methods
+pub trait SpaceManagerCpu<B: CpuBackend>:
+    CpuBackend
+    + MmuSpaceOps
+    + HasSpaceManager
+    + HasHookManager
+    + HasPcodeGenerator<InnerCpuBackend = B>
+    + HasConfig
+    + 'static
+{
+}
+/// Auto implementation of SpaceManagerCpu
+impl<T> SpaceManagerCpu<T> for T where
+    T: CpuBackend
+        + MmuSpaceOps
+        + HasSpaceManager
+        + HasHookManager
+        + HasPcodeGenerator<InnerCpuBackend = T>
+        + HasConfig
+        + 'static
+{
+}
+
 /// Owner of pcode machine's [Space]s and provides abstraction for reading and writing to [Space]s.
 #[derive(Debug)]
 pub struct SpaceManager {
@@ -319,8 +343,8 @@ impl SpaceManager {
     ///
     /// TODO: make this return `HookedError` with an UnknownError type to properly propagate errors
     /// from hooks.
-    pub fn read_hooked(
-        cpu: &mut (impl CpuBackend + MmuSpaceOps + HasSpaceManager + HasHookManager),
+    pub fn read_hooked<T: SpaceManagerCpu<T>>(
+        cpu: &mut T,
         mmu: &mut Mmu,
         ev: &mut EventController,
         varnode: &VarnodeData,
@@ -372,8 +396,8 @@ impl SpaceManager {
     ///
     /// To mimic the Unicorn backend's behavior, we always give a slice of 8 bytes to the memory
     /// write hook with the `size` parameter being the actual size of the write.
-    pub fn write_hooked(
-        cpu: &mut (impl CpuBackend + MmuSpaceOps + HasSpaceManager + HasHookManager),
+    pub fn write_hooked<T: SpaceManagerCpu<T>>(
+        cpu: &mut T,
         mmu: &mut Mmu,
         ev: &mut EventController,
         varnode: &VarnodeData,
@@ -416,15 +440,7 @@ impl SpaceManager {
     }
 
     /// Reads a varnode from the mmu spaces and triggers RegisterRead hooks.
-    pub fn read_hooked_register<
-        B: CpuBackend
-            + HasSpaceManager
-            + MmuSpaceOps
-            + HasHookManager
-            + HasPcodeGenerator<InnerCpuBackend = B>
-            + HasConfig
-            + 'static,
-    >(
+    pub fn read_hooked_register<B: SpaceManagerCpu<B>>(
         cpu: &mut B,
         mmu: &mut Mmu,
         ev: &mut EventController,
@@ -437,15 +453,7 @@ impl SpaceManager {
         }
     }
     /// Reads a varnode from the mmu spaces and triggers RegisterRead hooks.
-    pub fn read_hooked_register_inner<
-        B: CpuBackend
-            + HasSpaceManager
-            + MmuSpaceOps
-            + HasHookManager
-            + HasPcodeGenerator<InnerCpuBackend = B>
-            + HasConfig
-            + 'static,
-    >(
+    pub fn read_hooked_register_inner<B: SpaceManagerCpu<B>>(
         cpu: &mut B,
         mmu: &mut Mmu,
         ev: &mut EventController,
@@ -491,15 +499,7 @@ impl SpaceManager {
     }
 
     /// Reads a varnode from the mmu spaces and triggers RegisterRead hooks.
-    pub fn write_hooked_register<
-        B: CpuBackend
-            + HasSpaceManager
-            + MmuSpaceOps
-            + HasHookManager
-            + HasPcodeGenerator<InnerCpuBackend = B>
-            + HasConfig
-            + 'static,
-    >(
+    pub fn write_hooked_register<B: SpaceManagerCpu<B>>(
         cpu: &mut B,
         mmu: &mut Mmu,
         ev: &mut EventController,
@@ -515,15 +515,7 @@ impl SpaceManager {
     }
 
     /// Reads a varnode from the mmu spaces and triggers RegisterRead hooks.
-    fn write_hooked_register_inner<
-        B: CpuBackend
-            + HasSpaceManager
-            + MmuSpaceOps
-            + HasHookManager
-            + HasPcodeGenerator<InnerCpuBackend = B>
-            + HasConfig
-            + 'static,
-    >(
+    fn write_hooked_register_inner<B: SpaceManagerCpu<B>>(
         cpu: &mut B,
         mmu: &mut Mmu,
         ev: &mut EventController,
@@ -626,6 +618,8 @@ pub(crate) trait MmuSpaceOps {
     ) -> Result<(), ChunkError>;
 }
 
+/// This implementation is not restricted to `SpaceManagerCpu` as
+/// this bound is used by other `CpuBackend` wrapper traits.
 impl<T> MmuSpaceOps for T
 where
     T: HasSpaceManager + CpuBackend,

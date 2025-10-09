@@ -21,7 +21,7 @@ use crate::{
 
 /// This sets up the space manager and is where we define the backing store
 /// for each of the spaces added to the machine, based on their space name.
-/// The Ram space is added as the default space and has the [StyxStore]
+/// The Ram space is added as the default space and has the [BlobStore]
 /// memory storage and the [SpaceName::Constant] store added by default.
 ///
 /// Currently this allocates giant vectors which makes space reads/writes very fast
@@ -48,7 +48,7 @@ pub fn build_space_manager<T: CpuBackend + 'static>(
     for (space_name, space_info) in spaces {
         let space_memory = match space_name {
             SpaceName::Register => Some(BlobStore::new(REGISTER_SPACE_SIZE).unwrap().into()),
-            SpaceName::Ram => None, // Default space already added with [StyxStore]
+            SpaceName::Ram => None, // Default space already added with [BlobStore]
             SpaceName::Constant => None, // Constant space already added from SpaceManager
             SpaceName::Unique => Some(BlobStore::new(u32::MAX as usize).unwrap().into()),
             SpaceName::Other(_) => Some(HashStore::<1>::new().into()),

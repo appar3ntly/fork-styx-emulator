@@ -28,6 +28,39 @@ use styx_processor::{
     memory::{MemoryOperationError, Mmu, MmuOpError},
 };
 
+/// This is a trait encapsulating a `CpuBackend` plus
+/// the other traits that are used during over the course of P-code execution,
+/// like the space manager, hook manager, etc. It makes
+/// function signatures for `execute_pcode` and related functions easier.
+///
+/// Only structs that implement all of the following traits
+/// can be used with the `execute_pcode` and associated functions.
+pub trait BasePcodeExecutor<T: CpuBackend>:
+    CpuBackend
+    + HasSpaceManager
+    + HasHookManager
+    + HasPcodeGenerator<InnerCpuBackend = T>
+    + HasConfig
+    + MmuSpaceOps
+    + CallOtherCpu<T>
+    + 'static
+{
+}
+
+/// Automatic implementation of `BasePcodeExecutor` for any type that
+/// implements the required traits.
+impl<T> BasePcodeExecutor<T> for T where
+    T: CpuBackend
+        + HasSpaceManager
+        + HasHookManager
+        + HasPcodeGenerator<InnerCpuBackend = T>
+        + HasConfig
+        + MmuSpaceOps
+        + CallOtherCpu<T>
+        + 'static
+{
+}
+
 pub(crate) trait PcodeHelpers {
     fn get_input(&self, input: usize) -> &VarnodeData;
     fn get_output(&self) -> &VarnodeData;
@@ -69,16 +102,7 @@ impl<'a> From<PCodeStateChange> for PCodeStateChangeInner<'a> {
     }
 }
 
-pub fn execute_pcode<
-    T: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = T>
-        + HasConfig
-        + MmuSpaceOps
-        + CallOtherCpu<T>
-        + 'static,
->(
+pub fn execute_pcode<T: BasePcodeExecutor<T>>(
     pcode: &Pcode,
     cpu: &mut T,
     mmu: &mut Mmu,
@@ -128,16 +152,7 @@ pub fn execute_pcode<
     }
 }
 
-fn execute_pcode_inner<
-    'a,
-    B: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = B>
-        + HasConfig
-        + MmuSpaceOps
-        + 'static,
->(
+fn execute_pcode_inner<'a, B: BasePcodeExecutor<B>>(
     pcode: &'a Pcode,
     cpu: &mut B,
     mmu: &mut Mmu,
@@ -947,17 +962,7 @@ fn execute_pcode_inner<
     }
 }
 
-fn unary_typed_inner<
-    V0: PcodeType,
-    O: PcodeType,
-    C: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = C>
-        + HasConfig
-        + MmuSpaceOps
-        + 'static,
->(
+fn unary_typed_inner<V0: PcodeType, O: PcodeType, C: BasePcodeExecutor<C>>(
     pcode: &Pcode,
     cpu: &mut C,
     mmu: &mut Mmu,
@@ -979,18 +984,7 @@ fn unary_typed_inner<
     );
     PCodeStateChange::Fallthrough
 }
-fn unary_typed<
-    'a,
-    V0: PcodeType,
-    O: PcodeType,
-    C: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = C>
-        + HasConfig
-        + MmuSpaceOps
-        + 'static,
->(
+fn unary_typed<'a, V0: PcodeType, O: PcodeType, C: BasePcodeExecutor<C>>(
     pcode: &'a Pcode,
     cpu: &mut C,
     mmu: &mut Mmu,
@@ -1000,18 +994,7 @@ fn unary_typed<
     unary_typed_inner(pcode, cpu, mmu, ev, f).into()
 }
 
-fn binary_typed_inner<
-    V0: PcodeType,
-    V1: PcodeType,
-    O: PcodeType,
-    C: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = C>
-        + HasConfig
-        + MmuSpaceOps
-        + 'static,
->(
+fn binary_typed_inner<V0: PcodeType, V1: PcodeType, O: PcodeType, C: BasePcodeExecutor<C>>(
     pcode: &Pcode,
     cpu: &mut C,
     mmu: &mut Mmu,
@@ -1039,19 +1022,7 @@ fn binary_typed_inner<
     PCodeStateChange::Fallthrough
 }
 
-fn binary_typed<
-    'a,
-    V0: PcodeType,
-    V1: PcodeType,
-    O: PcodeType,
-    C: CpuBackend
-        + HasSpaceManager
-        + HasHookManager
-        + HasPcodeGenerator<InnerCpuBackend = C>
-        + HasConfig
-        + MmuSpaceOps
-        + 'static,
->(
+fn binary_typed<'a, V0: PcodeType, V1: PcodeType, O: PcodeType, C: BasePcodeExecutor<C>>(
     pcode: &'a Pcode,
     cpu: &mut C,
     mmu: &mut Mmu,

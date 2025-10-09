@@ -302,12 +302,21 @@ impl MappedRegister {
     }
 }
 
+/// This is a trait that encapsulates the required
+/// traits to be implemented for a struct that implements [CpuBackend].
+/// in order for the struct to be able to use the [RegsterHandler] and
+/// [RegisterCallback]s.
 pub(crate) trait RegisterCallbackCpu<T: CpuBackend>:
     CpuBackend
     + HasSpaceManager
     + HasPcodeGenerator<InnerCpuBackend = T>
     + HasRegisterManager<InnerCpuBackend = T>
 {
+    /// A register callback that uses both a space manager and P-code generator
+    /// at the same time cannot borrow each one individiually due to ownership constraints.
+    ///
+    /// As such, this trait requires an implementation that allows both the space maanger
+    /// and P-code generator to be borrowed at the same time.
     fn borrow_space_gen(&mut self) -> (&mut SpaceManager, &mut GhidraPcodeGenerator<T>);
 }
 
