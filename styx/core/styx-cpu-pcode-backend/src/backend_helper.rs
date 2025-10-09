@@ -19,6 +19,17 @@ use crate::{
     GhidraPcodeGenerator, MachineState, MmuSpace, REGISTER_SPACE_SIZE,
 };
 
+/// This sets up the space manager and is where we define the backing store
+/// for each of the spaces added to the machine, based on their space name.
+/// The Ram space is added as the default space and has the [StyxStore]
+/// memory storage and the [SpaceName::Constant] store added by default.
+///
+/// Currently this allocates giant vectors which makes space reads/writes very fast
+/// but also theoretically takes a lot of memory. However, Linux's paging system
+/// allows us to allocate lots of memory without actually using any physical memory
+/// until we access it.
+///
+/// This might blow if something writes to all addresses.
 pub fn build_space_manager<T: CpuBackend + 'static>(
     pcode_generator: &GhidraPcodeGenerator<T>,
 ) -> SpaceManager {
@@ -36,17 +47,6 @@ pub fn build_space_manager<T: CpuBackend + 'static>(
     );
     for (space_name, space_info) in spaces {
         let space_memory = match space_name {
-            // This is where we define the backing store for each of the spaces added to the
-            // machine, based on their space name. The Ram space is already added above as the
-            // default space and has the [StyxStore] memory storage and the
-            // [SpaceName::Constant] store added by default.
-
-            // Currently this allocates giant vectors which makes space reads/writes very fast
-            // but also theoretically takes a lot of memory. However, Linux's paging system
-            // allows us to allocate lots of memory without actually using any physical memory
-            // until we access it.
-
-            // This might blow if something writes to all addresses.
             SpaceName::Register => Some(BlobStore::new(REGISTER_SPACE_SIZE).unwrap().into()),
             SpaceName::Ram => None, // Default space already added with [StyxStore]
             SpaceName::Constant => None, // Constant space already added from SpaceManager

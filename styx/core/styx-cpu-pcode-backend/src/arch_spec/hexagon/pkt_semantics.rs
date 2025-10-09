@@ -29,8 +29,6 @@ impl<T: CpuBackend> CallOtherCallback<T> for NewReg {
         debug_assert_eq!(inputs.len(), 1);
         debug_assert!(output.is_some());
 
-        // Should I be unwrapping?
-        // Not happy about clones
         let mut input = inputs[0].clone();
         input.offset += DEST_REG_OFFSET;
         let reg_val = backend
