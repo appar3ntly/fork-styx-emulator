@@ -73,9 +73,9 @@ impl TryFrom<GetPcodeError> for PcodeFetchException {
     }
 }
 
-/// For use with a PcodeBackend (and not other PcodeBackends). This function wraps
-/// `get_pcode_at_address`, and extracts the needed context options and current PC,
-/// which require `PcodeBackend`-specific function calls.
+/// For use with `PcodeBackend`. This function wraps `get_pcode_at_address`, and
+/// extracts the needed context options and current PC, which require
+/// `PcodeBackend`-specific function calls.
 fn get_pcode_for_pcode_backend(
     cpu: &mut PcodeBackend,
     pcodes: &mut Vec<Pcode>,

@@ -82,7 +82,41 @@ pub struct BackendHelperExecuteInfo<T> {
     pub execute_single_info: Option<T>,
 }
 
-pub trait BackendHelper<T, Q>: CpuBackend + HasHookManager + Sized {
+/// This helper is a trait that provides some common implementations for
+/// executing P-codes across different execution backends to greatly simplify
+/// execution logic, which requires handling stop requests, hooks, etc. It can
+/// be used to execute P-codes instead of having to write custom logic for every Pcode-based execution
+/// backend. It does not handle fetching/decoding P-codes, and the trait's implementation in `execute_single`
+/// is expected to call this.
+///
+/// `BackendHelper` provides a method, `BackendHelper::execute_helper`, that performs
+/// all the functionality that `CpuBackend::execute` does. Any `CpuBackend` implementer
+/// that wants to take advantage of the common functionality implemented here may simply implement
+/// `BackendHelper` and call `BackendHelper::execute_helper` in the implmentation
+/// of `CpuBackend::execute`.
+///
+/// The helper takes in two generics, `ExecuteSingleData` and `PcodesContainer`.
+///
+/// `ExecuteSingledata` is the return type when execution of a single instruction finishes in
+/// `BackendHelper::execute_single`. This is generic as different execution
+/// backends may wish to provide different types of data to use when generating
+/// the execution report.
+///
+/// `PcodesContainer` is a container that holds P-codes for different execution backends.
+/// The Vec of P-codes passed to `BackendHelper::execute_single` has each element of type `PcodesContainer`.
+/// Different backends may choose to hold P-codes differently; the `HexagonPcodeBackend` chooses to set
+/// `PcodesContainer` to type Vec<Pcode> to have an array of P-codes for each instruction in one larger packet,
+/// as `HexagonPcodeBackend` executes packets, not instructions.
+///
+/// Others may set PodesContainer to type `Pcode`, corresponding to one array of P-codes for one instruction.
+///
+/// The `BackendHelper::execute_helper` returns the last `ExecuteSingleData` in its
+/// `BackendHelperExecuteInfo`, which can be used or discarded in the
+/// struct that implements `BackendHelper` and wraps `execute_helper` as
+/// described above in its implementation of `CpuBackend`.
+pub trait BackendHelper<ExecuteSingleData, PcodesContainer>:
+    CpuBackend + HasHookManager + Sized
+{
     /// Clears stop_requested and returns the previous result.
     ///
     /// Use this instead of checking the raw value stop_requested to avoid bugs in forgetting to
@@ -92,28 +126,68 @@ pub trait BackendHelper<T, Q>: CpuBackend + HasHookManager + Sized {
         self.set_stop_requested(false);
         res
     }
+
     fn pre_execute_hooks(
         &mut self,
         mmu: &mut Mmu,
         ev: &mut EventController,
     ) -> Result<(), UnknownError>;
+
+    /// The trait requires the implementation struct to contain a bool field called
+    /// `stop_requested`, which is helpful for calling hooks for knowing when to stop execution.
+    /// This should read that field.
     fn stop_requested(&self) -> bool;
+
+    /// The trait requires the implementation struct to contain a bool field called
+    /// `stop_requested`, which is helpful for calling hooks for knowing when to stop execution.
+    /// This should write that field.
     fn set_stop_requested(&mut self, stop_requested: bool);
+
+    /// Execute a single instruction. The `pcodes` passed in will be empty.
+    /// The implementation must use the backing program counter,
+    /// to fetch/decode pcodes for the current instruction,
+    /// and place them into the specified `pcodes` buffer.
+    ///
+    /// Then, the implementation will execute the sequence of P-codes it fetched and decoded.
+    /// If everything executes fully and successfully, the implementation returns `ExecuteSingleData`,
+    /// which is an implementation-defined generic containing relevant info about what happened during execution.
+    /// The callee may use this information to return a more detailed execution report.
+    ///
+    /// If execution doesn't finish but errors do not occur, an Ok(Err(TargetExitReason)) is returned,
+    /// detailing why execution finished early.
     fn execute_single(
         &mut self,
-        pcodes: &mut Vec<Q>,
+        pcodes: &mut Vec<PcodesContainer>,
         mmu: &mut Mmu,
         ev: &mut EventController,
-    ) -> Result<Result<T, TargetExitReason>, UnknownError>;
+    ) -> Result<Result<ExecuteSingleData, TargetExitReason>, UnknownError>;
+
+    /// The trait requires the implementation struct to contain a bool field called
+    /// `last_was_branch`, which is helpful for calling hooks for basic-block detection.
+    /// This should write that field.
     fn set_last_was_branch(&mut self, last_was_branch: bool);
+
+    /// The trait requires the implementation struct to contain a bool field called
+    /// `last_was_branch`, which is helpful for calling hooks for basic-block detection.
+    /// This should read that field.
     fn last_was_branch(&mut self) -> bool;
 
+    /// This contains all execution logic for executing a certain number of
+    /// instructions. It is supposed to have the functionality for `CpuBackend::execute`.
+    ///
+    /// It handles stop requests and various hooks (eg. pre-execute, basic block detected).
+    /// If all instruction execute successfully, it returns the last `ExecuteSingleData` from calling
+    /// `BackendHelper::execute_single`.
+    ///
+    /// If more fine-grained control over the `ExecuteSingleData` is desired (eg. using `ExecuteSingleData` from
+    /// every execute single to return a different result for an execution report), or a backend desires
+    /// to override when/what hooks are called, then this should be overridden.
     fn execute_helper(
         &mut self,
         mmu: &mut Mmu,
         event_controller: &mut EventController,
         count: u64,
-    ) -> Result<BackendHelperExecuteInfo<T>, UnknownError> {
+    ) -> Result<BackendHelperExecuteInfo<ExecuteSingleData>, UnknownError> {
         let mut state = MachineState::new(count);
         trace!("Starting pcode machine with max_count={count}");
 
@@ -206,7 +280,8 @@ pub trait BackendHelper<T, Q>: CpuBackend + HasHookManager + Sized {
         Ok(())
     }
 
-    /// Helper
+    /// This finds the first basic block start after
+    /// the current PC specified in `initial_pc`.
     fn find_first_basic_block(
         &mut self,
         mmu: &mut Mmu,

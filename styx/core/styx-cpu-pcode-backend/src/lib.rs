@@ -525,9 +525,6 @@ impl CpuBackend for PcodeBackend {
 
     fn set_pc(&mut self, value: u64) -> Result<(), UnknownError> {
         let mut pc_manager = self.pc_manager.take().unwrap();
-        // NOTE: if set_pc starts being called from a branching location,
-        // then we need to be more nuanced here.
-        // TODO: decide whether we should pass from_branch here as well
         pc_manager.set_internal_pc(value, self, false);
         let isa_pc = SizedValue::from_u128(pc_manager.isa_pc() as u128, 4);
         self.pc_manager = Some(pc_manager);

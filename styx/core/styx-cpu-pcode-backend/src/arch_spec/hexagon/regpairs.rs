@@ -19,7 +19,9 @@ use crate::{
 
 use super::backend::HexagonPcodeBackend;
 
-// TODO: FxHashmap here?
+// NOTE: these are only used for testing,
+// and in a RegisterHandler which is never used during
+// execution.
 lazy_static! {
     pub static ref REGPAIR_MAP: HashMap<HexagonRegister, (HexagonRegister, HexagonRegister)> =
         HashMap::from([
