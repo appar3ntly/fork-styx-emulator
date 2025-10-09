@@ -304,7 +304,7 @@ impl MappedRegister {
 
 /// This is a trait that encapsulates the required
 /// traits to be implemented for a struct that implements [CpuBackend].
-/// in order for the struct to be able to use the [RegsterHandler] and
+/// in order for the struct to be able to use the [RegisterHandler] and
 /// [RegisterCallback]s.
 pub(crate) trait RegisterCallbackCpu<T: CpuBackend>:
     CpuBackend
