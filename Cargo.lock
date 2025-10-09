@@ -6318,6 +6318,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "styx-hexagon-processor"
+version = "1.2.0"
+dependencies = [
+ "styx-core",
+ "styx-peripherals",
+]
+
+[[package]]
 name = "styx-hexagon-testdata"
 version = "1.2.0"
 dependencies = [
@@ -6744,6 +6752,7 @@ dependencies = [
  "styx-core",
  "styx-cyclonev-processor",
  "styx-event-controllers",
+ "styx-hexagon-processor",
  "styx-kinetis21-processor",
  "styx-powerquicci-processor",
  "styx-ppc4xx-processor",
