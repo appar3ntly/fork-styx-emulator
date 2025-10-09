@@ -27,7 +27,6 @@ use derivative::Derivative;
 use log::trace;
 use memory::{mmu_store::MmuSpace, space_manager::VarnodeError};
 use pcode_gen::GeneratePcodeError;
-use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use styx_cpu_type::{
     arch::{
@@ -121,20 +120,6 @@ impl MachineState {
 /// same TLB exception.
 ///
 #[derive(Derivative)]
-#[derivative(Eq, PartialEq, Hash, Debug, Clone, Copy)]
-pub enum SharedStateKey {
-    HexagonPktStart,
-    // For dotnew/hasnew - immext and such instructions shall be ignored
-    HexagonTrueInsnCount,
-    // Stores destination register in an instruction
-    HexagonInsnRegDest(usize),
-    // Is the current instruction immext?
-    HexagonCurrentInsnImmext,
-    // Keep track of the regs that currently are written
-    HexagonWrittenRegs,
-}
-
-#[derive(Derivative)]
 #[derivative(Debug)]
 pub struct PcodeBackend {
     space_manager: SpaceManager,
@@ -159,15 +144,8 @@ pub struct PcodeBackend {
 
     // holds saved register state
     saved_reg_context: BTreeMap<ArchRegister, RegisterValue>,
-    // we could use an enum with the previous map but it's easier to just
-    // make a separate saved context
-    saved_shared_state_context: FxHashMap<SharedStateKey, u128>,
     saved_pc_manager: Option<PcManager>,
     saved_generator_helper: Option<Box<GeneratorHelper>>,
-    // we may want to make this an enum dispatch at some point,
-    // and u128 is chosen to avoid space issues with storing
-    // registers that may be different sizes on different platforms
-    pub shared_state: FxHashMap<SharedStateKey, u128>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -243,10 +221,8 @@ impl PcodeBackend {
             last_was_branch: false,
             pcode_config: config.clone(),
             saved_reg_context: BTreeMap::default(),
-            saved_shared_state_context: FxHashMap::default(),
             saved_pc_manager: None,
             saved_generator_helper: None,
-            shared_state: FxHashMap::default(),
         }
     }
 
@@ -539,17 +515,12 @@ impl CpuBackend for PcodeBackend {
 
     fn context_save(&mut self) -> Result<(), UnknownError> {
         self.saved_reg_context.clear();
-        self.saved_shared_state_context.clear();
 
         for register in self.architecture().registers().registers() {
             // we need to do this because not every processor supports all of the valid registers defined by the architecture
             if let Ok(val) = self.read_register_raw(register.variant()) {
                 self.saved_reg_context.insert(register.variant(), val);
             }
-        }
-
-        for (state_key, val) in self.shared_state.iter() {
-            self.saved_shared_state_context.insert(*state_key, *val);
         }
 
         self.saved_pc_manager = self.pc_manager.clone();
@@ -568,12 +539,6 @@ impl CpuBackend for PcodeBackend {
         for register in reg_context.keys() {
             self.write_register_raw(*register, *reg_context.get(register).unwrap())?;
         }
-
-        // Copy saved shared state into the current shared state
-        for (state_key, val) in self.saved_shared_state_context.iter() {
-            self.shared_state.insert(*state_key, *val);
-        }
-        self.saved_shared_state_context.clear();
 
         let _ = std::mem::replace(&mut self.saved_reg_context, reg_context);
 
