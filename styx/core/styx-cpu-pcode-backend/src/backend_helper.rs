@@ -105,7 +105,7 @@ pub struct BackendHelperExecuteInfo<T> {
 /// `PcodesContainer` is a container that holds P-codes for different execution backends.
 /// The Vec of P-codes passed to `BackendHelper::execute_single` has each element of type `PcodesContainer`.
 /// Different backends may choose to hold P-codes differently; the `HexagonPcodeBackend` chooses to set
-/// `PcodesContainer` to type Vec<Pcode> to have an array of P-codes for each instruction in one larger packet,
+/// `PcodesContainer` to type `Vec<Pcode>` to have an array of P-codes for each instruction in one larger packet,
 /// as `HexagonPcodeBackend` executes packets, not instructions.
 ///
 /// Others may set PodesContainer to type `Pcode`, corresponding to one array of P-codes for one instruction.
