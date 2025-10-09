@@ -112,7 +112,10 @@ pub(crate) enum FetchPcodeError {
     Other(#[from] UnknownError),
 }
 
-/// Handle a GetPcodeError by calling the registered hooks.
+/// Handle a GetPcodeError by calling the registered exception handler
+/// for the exception we received. Fails immediately if we have a
+/// `GetPcodeError::MmuOpError` or if the `GetPcodeError` cannot be
+/// covnerted to a `PcodeFetchException`.
 ///
 /// We need this separate of fetch_pcode since our Hexagon backend
 /// may want to restart its packet-fetching process after this, as opposed to
@@ -180,12 +183,18 @@ pub(crate) fn handle_pcode_exception<
 
 /// Fetches bytes from memory, translates into pcode, and digests into backend friendly errors.
 ///
-/// A top level `Err(UnknownError)` indicates a fatal error.
+/// If a first attempt to get pcodes fails, the function tries to resolve the error using
+/// `handle_pcode_exception`. The function fails if we are unable to resolve the error
+/// using `handle_pcode_exception`.
 ///
-/// A Ok(Err(exit_reason)) indicates the fetch_pcode triggered an exception and the emulator should
-/// pause with the given exception.
+/// If `handle_pcode_exception `succeeds, we try to fetch the pcodes again.
+/// If fetching/decoding pcodes fails the second time, we return an error.
 ///
-/// A Ok(Ok(u64)) indicates pcodes were successfully fetched and `n` bytes were read.
+/// An Err(exit_reason) indicates an exception was triggered by either `handle_pcode_exception` or
+/// the second attempt to fetch pcodes after a failure. The emulator should
+/// pause with the given exception in this case.
+///
+/// A Ok(u64) indicates pcodes were successfully fetched and `n` bytes were read.
 ///
 /// On success, `pcodes` will have the translated pcodes appended to it.
 pub(crate) fn fetch_pcode(
@@ -196,14 +205,14 @@ pub(crate) fn fetch_pcode(
 ) -> Result<u64, FetchPcodeError> {
     // attempt to fetch and translate pcodes
     let result = get_pcode_for_pcode_backend(cpu, pcodes, mmu, ev);
-    // if success, then return early
+    // return early on success, or save the error to see if we can resolve the target error
     let result_err = match result {
         Ok(success) => return Ok(success),
         Err(err) => err,
     };
 
     // now we know we encountered an error.
-    // this could be an exception that we have to handle or a fatal error
+    // This could be an exception that we have to handle, or a fatal error
     let (target_exit_reason, did_fix) = handle_pcode_exception(cpu, mmu, ev, result_err)?;
 
     // if we fixed, try get pcodes again and error if another error occurs.
