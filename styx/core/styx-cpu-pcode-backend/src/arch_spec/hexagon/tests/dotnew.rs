@@ -191,6 +191,35 @@ fn test_predicate_dotnew() {
     assert_eq!(r1, 1);
 }
 
+/// Basic test to ensure that the 32-bit stores (which have
+/// the same Type field for ICLASS value 0b1010) do not get
+/// mistakenly recognized as a new-value store, but rather
+/// just a regular store.
+#[test]
+fn test_word_no_dotnew_store() {
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
+        r#"
+       0:	ff 7f ff 0f	0fff7fff { 	immext(#0xffffffc0)
+       4:	30 d8 99 a1	a199d830   	memw(r25+##-0x10) = r24 }
+"#,
+    );
+
+    const MEM_START: u32 = 0x20;
+    const MAGIC_VALUE: u32 = 0x76187762;
+
+    cpu.write_register(HexagonRegister::R25, MEM_START).unwrap();
+    cpu.write_register(HexagonRegister::R24, MAGIC_VALUE)
+        .unwrap();
+
+    let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
+    assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
+
+    let mem_value = mmu
+        .read_u32_le_virt_data((MEM_START - 0x10) as u64, &mut cpu)
+        .unwrap();
+    assert_eq!(mem_value, MAGIC_VALUE)
+}
+
 fn test_dotnew_basic(
     insn: &str,
     verify_insn: Option<Vec<u8>>,

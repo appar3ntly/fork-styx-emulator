@@ -36,6 +36,8 @@ struct IclassLoadStoreInstruction {
 #[bitfield(u26)]
 #[derive(Debug)]
 struct IclassStoreInstruction {
+    #[bit(19, r)]
+    unsigned: bool,
     #[bits(20..=22, r)]
     iclass_subtype: Option<IclassStoreType>,
     #[bits(9..=10, r)]
@@ -141,7 +143,13 @@ pub fn parse_dotnew(insn: GeneralHexagonInstruction) -> Option<u32> {
             trace!("dotnew: iclass store, reserved field is {reserved_field:x?}");
 
             match reserved_field.iclass_subtype() {
-                Ok(IclassStoreType::Dotnew) => Some(reserved_field.nv_reg_offset().into()),
+                // See Hexagon manual sections 11.7 NV "Store new-value word" and 11.8 ST "Store word"
+                // along with https://github.com/quic/qemu/blob/hex-next/target/hexagon/imported/encode_pp.def.
+                //
+                // A new-value store of this ICLASS must have Type 0b101 and Unsigned set to 1.
+                Ok(IclassStoreType::Dotnew) if reserved_field.unsigned() => {
+                    Some(reserved_field.nv_reg_offset().into())
+                }
                 _ => None,
             }
         }
