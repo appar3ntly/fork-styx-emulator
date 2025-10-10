@@ -6323,6 +6323,7 @@ version = "1.2.0"
 dependencies = [
  "styx-core",
  "styx-peripherals",
+ "styx-workspace-hack",
 ]
 
 [[package]]
