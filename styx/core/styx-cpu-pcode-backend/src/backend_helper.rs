@@ -29,7 +29,7 @@ use crate::{
 /// allows us to allocate lots of memory without actually using any physical memory
 /// until we access it.
 ///
-/// This might blow if something writes to all addresses.
+/// Note, [BlobStore] might blow if something writes to all addresses.
 pub fn build_space_manager<T: CpuBackend + 'static>(
     pcode_generator: &GhidraPcodeGenerator<T>,
 ) -> SpaceManager {
