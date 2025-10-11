@@ -4,7 +4,7 @@
 use styx_core::cpu::arch::hexagon::HexagonVariants;
 use styx_core::cpu::{Arch, Backend};
 use styx_core::loader::LoaderHints;
-use styx_core::memory::{memory_region::MemoryRegion, MemoryPermissions, Mmu};
+use styx_core::memory::{MemoryPermissions, Mmu};
 use styx_core::prelude::log::trace;
 use styx_core::prelude::{EventControllerImpl, Peripheral};
 use styx_core::{
