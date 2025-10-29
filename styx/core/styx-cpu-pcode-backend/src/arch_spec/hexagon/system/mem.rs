@@ -22,8 +22,6 @@ use crate::{
     HexagonPcodeBackend, PCodeStateChange,
 };
 
-use super::regs::Syscfg;
-
 /// Handle the isync instruction, see 11.9.3 "Instruction synchronization."
 ///
 /// This will be called after the SYSCFG register is set, so we can update
