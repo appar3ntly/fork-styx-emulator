@@ -25,7 +25,7 @@ pub struct InterruptGenericStub {
     from: &'static str,
 }
 
-/// Look at https://github.com/quic/qemu/blob/hex-next/target/hexagon/cpu_bits.h
+/// Look at <https://github.com/quic/qemu/blob/hex-next/target/hexagon/cpu_bits.h>
 #[repr(i32)]
 #[allow(unused)]
 pub enum InterruptType {
