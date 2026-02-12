@@ -212,7 +212,7 @@ pub fn vmux() {
     cpu.write_register(HexagonRegister::D3, 0x1122334466778899u64)
         .unwrap();
     // Predicate
-    cpu.write_register(HexagonRegister::P0, 0b11010101u32)
+    cpu.write_register(HexagonRegister::P0, 0b11010101u8)
         .unwrap();
 
     let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
