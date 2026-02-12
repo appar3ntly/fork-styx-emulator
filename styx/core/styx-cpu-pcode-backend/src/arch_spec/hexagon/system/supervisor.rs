@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BSD-2-Clause
 use derive_more::FromStr;
-use log::{debug, trace};
 use styx_errors::anyhow::Context;
 use styx_pcode::{pcode::VarnodeData, sla::SlaUserOps};
 use styx_pcode_translator::sla::HexagonUserOps;

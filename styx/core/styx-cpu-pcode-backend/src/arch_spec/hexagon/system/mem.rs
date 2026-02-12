@@ -3,18 +3,13 @@
 use std::str::FromStr;
 
 use log::info;
-use styx_cpu_type::arch::hexagon::HexagonRegister;
 use styx_errors::anyhow::Context;
 use styx_pcode::{
     pcode::{SpaceName, VarnodeData},
     sla::SlaUserOps,
 };
 use styx_pcode_translator::sla::HexagonUserOps;
-use styx_processor::{
-    cpu::{CpuBackend, CpuBackendExt},
-    event_controller::EventController,
-    memory::Mmu,
-};
+use styx_processor::{cpu::CpuBackend, event_controller::EventController, memory::Mmu};
 
 use crate::{
     arch_spec::ArchSpecBuilder,
@@ -87,7 +82,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for MemHandler {
 
         info!("memw_phys read {output_data:x}");
 
-        cpu.write(&output, output_data.into())
+        cpu.write(output, output_data.into())
             .with_context(|| "couldn't write physical memory value to register")?;
 
         Ok(PCodeStateChange::Fallthrough)

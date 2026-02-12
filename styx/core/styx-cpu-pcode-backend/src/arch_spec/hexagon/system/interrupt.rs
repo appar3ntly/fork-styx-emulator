@@ -27,6 +27,7 @@ pub struct InterruptGenericStub {
 
 /// Look at https://github.com/quic/qemu/blob/hex-next/target/hexagon/cpu_bits.h
 #[repr(i32)]
+#[allow(unused)]
 pub enum InterruptType {
     None = -1,
     Reset = 0,
@@ -248,13 +249,10 @@ impl<T: CpuBackend> CallOtherCallback<T> for NmiHandler {
         // WARN NOTE TODO
         // we only have one thread, so this suffices.
         if rs_val & 1 == 0 {
-            trace!("nmi({:x}) called", rs_val);
+            trace!("nmi({rs_val:x}) called");
             Ok(PCodeStateChange::Fallthrough)
         } else {
             unimplemented!("nmi({:x}) called", rs_val);
-            Ok(PCodeStateChange::DelayedInterrupt(
-                InterruptType::Imprecise as i32,
-            ))
         }
     }
 }

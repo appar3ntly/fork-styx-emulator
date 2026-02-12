@@ -2,7 +2,7 @@
 //! These aren't system instructions, but I guess they can be accelerated by farming them out to Rust.
 //! And I guess analysis doesn't matter as much for this?
 use derive_more::FromStr;
-use log::{debug, trace};
+use log::trace;
 use styx_errors::anyhow::Context;
 use styx_pcode::{pcode::VarnodeData, sla::SlaUserOps};
 use styx_pcode_translator::sla::HexagonUserOps;
@@ -39,7 +39,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for Cl1Handler {
         let shift_amt = 64 - (rs_sized_val.size() * 8);
         let shifted_rs_u64 = rs_u64 << shift_amt;
 
-        let leading_ones = shifted_rs_u64.leading_ones() as u32;
+        let leading_ones = shifted_rs_u64.leading_ones();
         cpu.write(rd, leading_ones.into())
             .with_context(|| "couldn't write leading ones into Rd for cl1")?;
 

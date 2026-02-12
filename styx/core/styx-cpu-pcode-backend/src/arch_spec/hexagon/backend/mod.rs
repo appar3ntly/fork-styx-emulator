@@ -3,7 +3,7 @@
 use anyhow::anyhow;
 pub use decode_info::{GeneralHexagonInstruction, Iclass};
 use execution_helper::DefaultHexagonExecutionHelper;
-use log::{info, trace};
+use log::trace;
 pub use saved_context_opts::SavedContextOpts;
 use smallvec::{smallvec, SmallVec};
 use std::collections::BTreeMap;
