@@ -229,7 +229,7 @@ pub fn vmux() {
 pub fn tableidxw(r4: u32, r5: u32, r5_expected: u32) {
     let (mut cpu, mut mmu, mut ev) = setup_objdump(
         r#"
-       0:	a5 c9 84 87	8784c9a5 { 	r5 = tableidxw(r4,#0x5,#0x9):raw } 
+       0:	a5 c9 84 87	8784c9a5 { 	r5 = tableidxw(r4,#0x5,#0x9):raw }
 "#,
     );
     cpu.write_register(HexagonRegister::R4, r4).unwrap();

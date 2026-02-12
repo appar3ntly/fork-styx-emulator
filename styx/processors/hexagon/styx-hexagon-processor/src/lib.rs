@@ -18,7 +18,7 @@ use styx_core::{
     },
     cpu::{ArchEndian, CpuBackendExt, HexagonPcodeBackend},
     errors::{anyhow, UnknownError},
-    hooks::{CoreHandle, Hookable, Resolution, StyxHook},
+    hooks::{CoreHandle, Hookable, StyxHook},
 };
 use tlb::HexagonTlb;
 
@@ -85,7 +85,7 @@ impl ProcessorImpl for HexagonBuilder {
                 .with_context(|| "couldn't read interrupt vector base")?;
             let jump_point = evb + (interrupt_number * 4) as u32;
 
-            info!("interrupt jumping to {:x}", jump_point);
+            info!("interrupt jumping to {jump_point:x}");
 
             // set elr to pc
             let pc = handle
@@ -93,7 +93,7 @@ impl ProcessorImpl for HexagonBuilder {
                 .pc()
                 .with_context(|| "couldn't get pc to write to elr")?;
 
-            info!("interrupt setting elr to {:x}", pc);
+            info!("interrupt setting elr to {pc:x}");
 
             handle
                 .cpu

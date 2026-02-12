@@ -6,7 +6,7 @@ use styx_core::{
     memory::{
         MemoryOperation, MemoryType, TlbImpl, TlbProcessor, TlbTranslateError, TlbTranslateResult,
     },
-    prelude::log::{error, info, trace},
+    prelude::log::{error, info},
 };
 
 // See https://github.com/quic/qemu/blob/hex-next/target/hexagon/cpu.h.
@@ -83,9 +83,9 @@ impl TlbImpl for HexagonTlb {
     fn translate_va(
         &mut self,
         virt_addr: u64,
-        access_type: MemoryOperation,
-        memory_type: MemoryType,
-        processor: &mut TlbProcessor,
+        _access_type: MemoryOperation,
+        _memory_type: MemoryType,
+        _processor: &mut TlbProcessor,
     ) -> TlbTranslateResult {
         if !self.enable_code_translation && !self.enable_data_translation {
             Ok(virt_addr)
@@ -100,10 +100,10 @@ impl TlbImpl for HexagonTlb {
                     continue;
                 }
 
-                let ppd = u64::from((ent.ppd() >> 5)).overflowing_shl(16).0;
+                let ppd = u64::from(ent.ppd() >> 5).overflowing_shl(16).0;
                 let ent_vpn = u32::from(ent.vpn()) >> 4;
 
-                info!("ent vpn {:x} real vpn {:x}", ent_vpn, vpn);
+                info!("ent vpn {ent_vpn:x} real vpn {vpn:x}");
                 info!(
                     "ent ppd {:x} shift ppd {:x} off {:x}",
                     ent.ppd(),
@@ -111,9 +111,9 @@ impl TlbImpl for HexagonTlb {
                     offset
                 );
                 if ent_vpn == vpn {
-                    let pa = u64::from(ppd + offset as u64);
+                    let pa = ppd + offset as u64;
                     info!("translated {virt_addr:x} to {pa:x}");
-                    return Ok(pa as u64);
+                    return Ok(pa);
                 }
             }
 
@@ -123,7 +123,7 @@ impl TlbImpl for HexagonTlb {
         }
     }
 
-    fn tlb_write(&mut self, idx: usize, data: u64, flags: u32) -> Result<(), TlbTranslateError> {
+    fn tlb_write(&mut self, idx: usize, data: u64, _flags: u32) -> Result<(), TlbTranslateError> {
         let pte = Pte::new_with_raw_value(data);
         self.entries[idx] = pte;
         info!(
@@ -134,16 +134,16 @@ impl TlbImpl for HexagonTlb {
         Ok(())
     }
 
-    fn tlb_read(&self, idx: usize, flags: u32) -> Result<u64, TlbTranslateError> {
+    fn tlb_read(&self, _idx: usize, _flags: u32) -> Result<u64, TlbTranslateError> {
         todo!()
     }
 
     /// This is only used for ASID in our implementation
-    fn invalidate_all(&mut self, flags: u32) -> Result<(), UnknownError> {
+    fn invalidate_all(&mut self, _flags: u32) -> Result<(), UnknownError> {
         todo!()
     }
 
-    fn invalidate(&mut self, idx: usize) -> Result<(), UnknownError> {
+    fn invalidate(&mut self, _idx: usize) -> Result<(), UnknownError> {
         todo!()
     }
 }

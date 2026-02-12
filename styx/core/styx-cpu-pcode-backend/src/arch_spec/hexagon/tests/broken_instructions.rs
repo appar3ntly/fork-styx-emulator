@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-2-Clause
 use crate::arch_spec::hexagon::tests::*;
 use log::info;
 use styx_processor::{
@@ -8,8 +9,9 @@ use test_case::test_case;
 
 use super::setup_objdump;
 
+#[allow(clippy::too_many_arguments)]
 /// TODO: instructions that do both loads and stores!
-/// Such as { 	memb(r0+#0x18) |= r3 }
+/// Such as `{ memb(r0+#0x18) |= r3 }`
 fn wrong_size_sext_wrapper(
     objdump: &str,
     r21: u32,
@@ -42,7 +44,7 @@ fn wrong_size_sext_wrapper(
     cpu.add_hook(styx_processor::hooks::StyxHook::MemoryWrite(
         (0..(u32::MAX as u64)).into(),
         Box::new(
-            move |mut proc: CoreHandle, address: u64, size: u32, data: &[u8]| {
+            move |_proc: CoreHandle, address: u64, size: u32, _data: &[u8]| {
                 info!("address {address:x} size {size}");
                 assert!(size == data_size);
                 Ok(())
@@ -54,8 +56,8 @@ fn wrong_size_sext_wrapper(
     cpu.add_hook(styx_processor::hooks::StyxHook::MemoryRead(
         (0..(u32::MAX as u64)).into(),
         Box::new(
-            move |mut proc: CoreHandle, address: u64, size: u32, data: &mut [u8]| {
-                assert!(address >= MEM_RANGE_MIN && address <= MEM_RANGE_MAX);
+            move |_proc: CoreHandle, address: u64, size: u32, data: &mut [u8]| {
+                assert!(address <= MEM_RANGE_MAX);
                 assert!(size == data_size);
 
                 // Since these reads should sign extend, we should make sure that -1 is returned.
@@ -92,148 +94,148 @@ fn wrong_size_sext_wrapper(
 /// that seem to do this sort of behaviour.
 #[test_case(
 	r#"
-       0:	03 cc 00 3e	3e00cc03 { 	memb(r0+#0x18) += r3 } 
+       0:	03 cc 00 3e	3e00cc03 { 	memb(r0+#0x18) += r3 }
 	"#, 1, 2, 3, 4, 1, 1; "L4_add_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	23 cc 00 3e	3e00cc23 { 	memb(r0+#0x18) -= r3 } 
+       0:	23 cc 00 3e	3e00cc23 { 	memb(r0+#0x18) -= r3 }
 	"#, 1, 2, 3, 4, 1, 1; "L4_sub_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	43 cc 00 3e	3e00cc43 { 	memb(r0+#0x18) &= r3 } 
+       0:	43 cc 00 3e	3e00cc43 { 	memb(r0+#0x18) &= r3 }
 	"#, 1, 2, 3, 4, 1, 1; "L4_and_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	63 cc 00 3e	3e00cc63 { 	memb(r0+#0x18) |= r3 } 
+       0:	63 cc 00 3e	3e00cc63 { 	memb(r0+#0x18) |= r3 }
 	"#, 1, 2, 3, 4, 1, 1; "L4_or_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	0c cc 00 3f	3f00cc0c { 	memb(r0+#0x18) += #0xc } 
+       0:	0c cc 00 3f	3f00cc0c { 	memb(r0+#0x18) += #0xc }
 	"#, 1, 2, 3, 4, 1, 1; "L4_iadd_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	2c cc 00 3f	3f00cc2c { 	memb(r0+#0x18) -= #0xc } 
+       0:	2c cc 00 3f	3f00cc2c { 	memb(r0+#0x18) -= #0xc }
 	"#, 1, 2, 3, 4, 1, 1; "L4_isub_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	4c cc 00 3f	3f00cc4c { 	memb(r0+#0x18) = clrbit(#0xc) } 
+       0:	4c cc 00 3f	3f00cc4c { 	memb(r0+#0x18) = clrbit(#0xc) }
 	"#, 1, 2, 3, 4, 1, 1; "L4_iand_memopb_io"
 )]
 #[test_case(
 	r#"
-       0:	6c cc 00 3f	3f00cc6c { 	memb(r0+#0x18) = setbit(#0xc) } 
+       0:	6c cc 00 3f	3f00cc6c { 	memb(r0+#0x18) = setbit(#0xc) }
 	"#, 1, 2, 3, 4, 1, 1; "L4_ior_memopb_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
-       8:	1e ec 00 38	3800ec1e { 	if (p0) memb(r0+#0x18) = #-0x2 } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
+       8:	1e ec 00 38	3800ec1e { 	if (p0) memb(r0+#0x18) = #-0x2 }
 	"#, 99, 99, 3, 4, 2, 1; "S4_storeirbt_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
-       8:	1e ec 80 38	3880ec1e { 	if (!p0) memb(r0+#0x18) = #-0x2 } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
+       8:	1e ec 80 38	3880ec1e { 	if (!p0) memb(r0+#0x18) = #-0x2 }
 	"#, 1, 2, 3, 4, 2, 1; "S4_storeirbf_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
        4:	01 58 17 f2	f2175801   	p1 = cmp.eq(r23,r24)
-       8:	1e ec 00 39	3900ec1e   	if (p0.new) memb(r0+#0x18) = #-0x2 } 
+       8:	1e ec 00 39	3900ec1e   	if (p0.new) memb(r0+#0x18) = #-0x2 }
 	"#, 99, 99, 3, 4, 1, 1; "S4_storeirbtnew_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
        4:	01 58 17 f2	f2175801   	p1 = cmp.eq(r23,r24)
-       8:	1e ec 80 39	3980ec1e   	if (!p0.new) memb(r0+#0x18) = #-0x2 } 
+       8:	1e ec 80 39	3980ec1e   	if (!p0.new) memb(r0+#0x18) = #-0x2 }
 	"#, 1, 2, 3, 4, 1, 1; "S4_storeirbfnew_io"
 )]
 #[test_case(
 	r#"
-       0:	7d ec 00 3c	3c00ec7d { 	memb(r0+#0x18) = #-0x3 } 
+       0:	7d ec 00 3c	3c00ec7d { 	memb(r0+#0x18) = #-0x3 }
 	"#, 1, 2, 3, 4, 1, 1; "S4_storeirb_io"
 )]
 #[test_case(
 	r#"
-       0:	03 de 20 3e	3e20de03 { 	memh(r0+#0x78) += r3 } 
+       0:	03 de 20 3e	3e20de03 { 	memh(r0+#0x78) += r3 }
 	"#, 1, 2, 3, 4, 1, 2; "L4_add_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	23 de 20 3e	3e20de23 { 	memh(r0+#0x78) -= r3 } 
+       0:	23 de 20 3e	3e20de23 { 	memh(r0+#0x78) -= r3 }
 	"#, 1, 2, 3, 4, 1, 2; "L4_sub_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	43 de 20 3e	3e20de43 { 	memh(r0+#0x78) &= r3 } 
+       0:	43 de 20 3e	3e20de43 { 	memh(r0+#0x78) &= r3 }
 	"#, 1, 2, 3, 4, 1, 2; "L4_and_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	63 de 20 3e	3e20de63 { 	memh(r0+#0x78) |= r3 } 
+       0:	63 de 20 3e	3e20de63 { 	memh(r0+#0x78) |= r3 }
 	"#, 1, 2, 3, 4, 1, 2; "L4_or_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	0c de 20 3f	3f20de0c { 	memh(r0+#0x78) += #0xc } 
+       0:	0c de 20 3f	3f20de0c { 	memh(r0+#0x78) += #0xc }
 	"#, 1, 2, 3, 4, 1, 2; "L4_iadd_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	2c de 20 3f	3f20de2c { 	memh(r0+#0x78) -= #0xc } 
+       0:	2c de 20 3f	3f20de2c { 	memh(r0+#0x78) -= #0xc }
 	"#, 1, 2, 3, 4, 1, 2; "L4_isub_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	4c de 20 3f	3f20de4c { 	memh(r0+#0x78) = clrbit(#0xc) } 
+       0:	4c de 20 3f	3f20de4c { 	memh(r0+#0x78) = clrbit(#0xc) }
 	"#, 1, 2, 3, 4, 1, 2; "L4_iand_memoph_io"
 )]
 #[test_case(
 	r#"
-       0:	6c de 20 3f	3f20de6c { 	memh(r0+#0x78) = setbit(#0xc) } 
+       0:	6c de 20 3f	3f20de6c { 	memh(r0+#0x78) = setbit(#0xc) }
 	"#, 1, 2, 3, 4, 1, 2; "L4_ior_memoph_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
-       8:	1e fe 20 38	3820fe1e { 	if (p0) memh(r0+#0x78) = #-0x2 } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
+       8:	1e fe 20 38	3820fe1e { 	if (p0) memh(r0+#0x78) = #-0x2 }
 	"#, 99, 99, 3, 4, 2, 2; "S4_storeirht_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
-       8:	1e fe a0 38	38a0fe1e { 	if (!p0) memh(r0+#0x78) = #-0x2 } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
+       8:	1e fe a0 38	38a0fe1e { 	if (!p0) memh(r0+#0x78) = #-0x2 }
 	"#, 1, 2, 3, 4, 2, 2; "S4_storeirhf_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
        4:	01 58 17 f2	f2175801   	p1 = cmp.eq(r23,r24)
-       8:	1e fe 20 39	3920fe1e   	if (p0.new) memh(r0+#0x78) = #-0x2 } 
+       8:	1e fe 20 39	3920fe1e   	if (p0.new) memh(r0+#0x78) = #-0x2 }
 	"#, 99, 99, 3, 4, 1, 2; "S4_storeirhtnew_io"
 )]
 #[test_case(
 	r#"
        0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
        4:	01 58 17 f2	f2175801   	p1 = cmp.eq(r23,r24)
-       8:	1e fe a0 39	39a0fe1e   	if (!p0.new) memh(r0+#0x78) = #-0x2 } 
+       8:	1e fe a0 39	39a0fe1e   	if (!p0.new) memh(r0+#0x78) = #-0x2 }
 	"#, 1, 2, 3, 4, 1, 2; "S4_storeirhfnew_io"
 )]
 #[test_case(
 	r#"
-       0:	7d fe 20 3c	3c20fe7d { 	memh(r0+#0x78) = #-0x3 } 
+       0:	7d fe 20 3c	3c20fe7d { 	memh(r0+#0x78) = #-0x3 }
 	"#, 1, 2, 3, 4, 1, 2; "S4_storeirh_io"
 )]
 // Duplexes, which I did by hand since I can't be bothered to add the logic
@@ -242,14 +244,14 @@ fn wrong_size_sext_wrapper(
     r#"
        0:	00 40 00 7f	7f004000 { 	nop
        4:	00 40 00 7f	7f004000   	nop
-       8:	02 32 0e 7a	7a0e3202   	r22 = #-0x1; 	memb(r0+#0x2) = #0 } 
+       8:	02 32 0e 7a	7a0e3202   	r22 = #-0x1; 	memb(r0+#0x2) = #0 }
     "#, 1, 2, 3, 4, 1, 1; "SS2_storebi0"
 )]
 #[test_case(
     r#"
        0:	00 40 00 7f	7f004000 { 	nop
        4:	00 40 00 7f	7f004000   	nop
-       8:	02 33 0e 7a	7a0e3302   	r22 = #-0x1; 	memb(r0+#0x2) = #1 } 
+       8:	02 33 0e 7a	7a0e3302   	r22 = #-0x1; 	memb(r0+#0x2) = #1 }
     "#, 1, 2, 3, 4, 1, 1; "SS2_storebi1"
 )]
 fn wrong_size_stores(
@@ -268,28 +270,28 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	01 cb 00 41	4100cb01 { 	if (p1) r1 = memb(r0+#0x18) }
 	"#, 1, 2, 11029, 11029, 2, 1; "L2_ploadrbt_io"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 e3 02 9b	9b02e381 { 	if (p1) r1 = memb(r2++#-0x4) }
 	"#, 1, 2, 11029, 11029, 2, 1; "L2_ploadrbt_pi"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	01 cb 00 45	4500cb01 { 	if (!p1) r1 = memb(r0+#0x18) }
 	"#, 1, 2, 3, 4, 2, 1; "L2_ploadrbf_io"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 eb 02 9b	9b02eb81 { 	if (!p1) r1 = memb(r2++#-0x4) }
 	"#, 1, 2, 3, 4, 2, 1; "L2_ploadrbf_pi"
 )]
@@ -310,14 +312,14 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 c3 00 30	3000c381 { 	if (p0) r1 = memb(r0+r3<<#0x1) }
 	"#, 99, 99, 3, 4, 2, 1; "L4_ploadrbt_rr"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 c3 00 31	3100c381 { 	if (!p0) r1 = memb(r0+r3<<#0x1) }
 	"#, 1, 2, 3, 4, 2, 1; "L4_ploadrbf_rr"
 )]
@@ -352,7 +354,7 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	00 40 00 00	00004000 { 	immext(#0x0)
        c:	81 e2 00 9f	9f00e281   	if (p1) r1 = memb(##0x0) }
 	"#, 1, 2, 11029, 11029, 2, 1; "L4_ploadrbt_abs"
@@ -360,7 +362,7 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	00 40 00 00	00004000 { 	immext(#0x0)
        c:	81 ea 00 9f	9f00ea81   	if (!p1) r1 = memb(##0x0) }
 	"#, 1, 2, 3, 4, 2, 1; "L4_ploadrbf_abs"
@@ -389,28 +391,28 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 cf 40 41	4140cf81 { 	if (p1) r1 = memh(r0+#0x78) }
 	"#, 1, 2, 11029, 11029, 2, 2; "L2_ploadrht_io"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	c1 e3 42 9b	9b42e3c1 { 	if (p1) r1 = memh(r2++#-0x4) }
 	"#, 1, 2, 11029, 11029, 2, 2; "L2_ploadrht_pi"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 cf 40 45	4540cf81 { 	if (!p1) r1 = memh(r0+#0x78) }
 	"#, 1, 2, 3, 4, 2, 2; "L2_ploadrhf_io"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	c1 eb 42 9b	9b42ebc1 { 	if (!p1) r1 = memh(r2++#-0x4) }
 	"#, 1, 2, 3, 4, 2, 2; "L2_ploadrhf_pi"
 )]
@@ -431,14 +433,14 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 c3 40 30	3040c381 { 	if (p0) r1 = memh(r0+r3<<#0x1) }
 	"#, 99, 99, 3, 4, 2, 2; "L4_ploadrht_rr"
 )]
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	81 c3 40 31	3140c381 { 	if (!p0) r1 = memh(r0+r3<<#0x1) }
 	"#, 1, 2, 3, 4, 2, 2; "L4_ploadrhf_rr"
 )]
@@ -473,7 +475,7 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	00 40 00 00	00004000 { 	immext(#0x0)
        c:	81 e2 40 9f	9f40e281   	if (p1) r1 = memh(##0x0) }
 	"#, 1, 2, 11029, 11029, 2, 2; "L4_ploadrht_abs"
@@ -481,7 +483,7 @@ fn wrong_size_stores(
 #[test_case(
 	r#"
 0:	00 56 15 f2	f2155600 { 	p0 = cmp.eq(r21,r22)
-       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) } 
+       4:	01 d8 17 f2	f217d801   	p1 = cmp.eq(r23,r24) }
        8:	00 40 00 00	00004000 { 	immext(#0x0)
        c:	81 ea 40 9f	9f40ea81   	if (!p1) r1 = memh(##0x0) }
 	"#, 1, 2, 3, 4, 2, 2; "L4_ploadrhf_abs"

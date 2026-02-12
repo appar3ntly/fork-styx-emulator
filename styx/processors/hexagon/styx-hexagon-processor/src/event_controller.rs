@@ -5,10 +5,7 @@ use styx_core::{
     errors::UnknownError,
     event_controller::{ActivateIRQnError, InterruptExecuted, Peripherals},
     memory::Mmu,
-    prelude::{
-        log::{trace, warn},
-        EventControllerImpl, ExceptionNumber,
-    },
+    prelude::{log::trace, EventControllerImpl, ExceptionNumber},
 };
 
 #[derive(Default)]

@@ -25,7 +25,6 @@ use gdbstub::{
     target::{
         self,
         ext::{
-            base::single_register_access::SingleRegisterAccess,
             breakpoints::{HwWatchpointOps, SwBreakpointOps, WatchKind},
             lldb_register_info_override::LldbRegisterInfoOverride,
         },

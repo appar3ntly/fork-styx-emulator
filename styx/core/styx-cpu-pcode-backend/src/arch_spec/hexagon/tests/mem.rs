@@ -27,7 +27,7 @@ fn test_mem_load_halfword() {
     let (mut cpu, mut mmu, mut ev) = setup_objdump(
         r#"
        0:	06 40 82 91	91824006 { 	r6 = memw(r2+#0x0)
-       4:	81 c0 24 3c	3c24c081   	memh(r4+#0x2) = #0x1 } 
+       4:	81 c0 24 3c	3c24c081   	memh(r4+#0x2) = #0x1 }
 "#,
     );
 
