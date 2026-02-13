@@ -27,15 +27,26 @@ impl<T: CpuBackend> CallOtherCallback<T> for Cl1Handler {
         inputs: &[VarnodeData],
         output: Option<&VarnodeData>,
     ) -> Result<PCodeStateChange, CallOtherHandleError> {
+        // According to 11.10.2 XTYPE BIT in the Hexagon manual,
+        // the source register can either be 32 or 64 bits, so
+        // we want to write our function to handle both accordingly.
+
         let rs = &inputs[0];
         let rd = output.with_context(|| "couldn't read Rd for cl1")?;
 
-        // We actually have no idea how big this is, so we will just shift
         let rs_sized_val = cpu.read(rs).with_context(|| "couldn't read Rs for cl1")?;
         let rs_u64 = rs_sized_val
             .to_u64()
             .with_context(|| "couldn't cast Rs as u32 for cl1")?;
 
+        // Knowing that the varnode Rs may either be 32 or 64 bits,
+        // to make the "count leading ones" work universally,
+        // we want to ensure that the MSB for the 32 bit value is now
+        // the MSB for a 64 bit value so we can use the same leading_ones
+        // method irregardless of whether the input varnode was 32 or 64 bits.
+        //
+        // Therefore we shift left by 32 in the 32-bit case and shift left by
+        // zero in the 64-bit case.
         let shift_amt = 64 - (rs_sized_val.size() * 8);
         let shifted_rs_u64 = rs_u64 << shift_amt;
 
