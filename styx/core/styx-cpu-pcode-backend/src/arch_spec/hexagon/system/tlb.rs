@@ -31,6 +31,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for TlbGenericStub {
     }
 }
 
+/// FIXME: multicore (per-core tlb, will need to modify stuff for this?)
 #[derive(Debug)]
 pub struct TlbWrite {}
 impl<T: CpuBackend> CallOtherCallback<T> for TlbWrite {

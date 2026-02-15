@@ -62,6 +62,8 @@ pub enum InterruptType {
 ///
 /// See arch/hexagon/kernel/traps.c in Linux for reference,
 /// specifically the do_trap0 function.
+///
+/// FIXME: multicore (delayed interrupt may need changing)
 #[derive(Debug)]
 pub struct Trap0Handler;
 impl<T: CpuBackend> CallOtherCallback<T> for Trap0Handler {
@@ -107,6 +109,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for Trap0Handler {
 }
 
 /// Clear pending interrupts - see section 11.9.2 "Clear pending interrupts"
+/// FIXME: multicore (just double check there are no effects to handle)
 #[derive(Debug)]
 pub struct CswiHandler;
 impl<T: CpuBackend> CallOtherCallback<T> for CswiHandler {
@@ -156,6 +159,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for CswiHandler {
 }
 
 /// Clear interrupt auto disbale - see section 11.9.2 "Clear interrupt auto disbale"
+/// FIXME: multicore (just double check there are no effects to handle)
 #[derive(Debug)]
 pub struct CiadHandler;
 impl<T: CpuBackend> CallOtherCallback<T> for CiadHandler {
@@ -227,6 +231,7 @@ impl<T: CpuBackend> CallOtherCallback<T> for RteHandler {
 }
 
 /// Raise NMI on threads - 11.9.2
+/// FIXME: multicore
 #[derive(Debug)]
 pub struct NmiHandler;
 impl<T: CpuBackend> CallOtherCallback<T> for NmiHandler {

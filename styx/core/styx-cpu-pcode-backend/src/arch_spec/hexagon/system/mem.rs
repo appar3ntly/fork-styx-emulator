@@ -17,10 +17,8 @@ use crate::{
     HexagonPcodeBackend, PCodeStateChange,
 };
 
-/// Handle the isync instruction, see 11.9.3 "Instruction synchronization."
-///
-/// This will be called after the SYSCFG register is set, so we can update
-/// internal emulation state based on SYSCFG sets here.
+/// Handle memw_phys instruction, see 11.9.2 "Load from physical address"
+/// for more information.
 #[derive(Debug)]
 pub struct MemHandler {}
 
@@ -89,10 +87,11 @@ impl<T: CpuBackend> CallOtherCallback<T> for MemHandler {
     }
 }
 
-// TODO: both the slaspec implementations will need to be reworked when we
-// get multicore, since we will then need a global lock across cores
+// NOTE: there is no locking right now, as Styx only supports singlecore.
+// FIXME: multicore.
 //
-// NOTE: there is no locking right now.
+// Both the slaspec implementations will need to be reworked when we
+// get multicore, since we will then need a global lock across cores
 #[derive(Debug)]
 struct MemLockedHandler {}
 
