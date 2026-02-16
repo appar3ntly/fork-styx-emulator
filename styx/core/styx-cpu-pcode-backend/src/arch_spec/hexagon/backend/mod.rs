@@ -360,7 +360,7 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             fetch_decode_info.total_bytes_consumed,
         )? {
             // Only handle if there was actually an IRQ request
-            Ok(HexagonSingleInstructionAction(irqn)) => {
+            Ok(HexagonSingleInstructionAction::DelayedInterrupt(irqn)) => {
                 delayed_irqn = Some(irqn);
             }
             Err(reason) => return Ok(Err(reason)),

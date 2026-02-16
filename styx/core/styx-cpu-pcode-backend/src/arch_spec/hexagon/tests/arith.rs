@@ -70,6 +70,70 @@ pub fn testbit_reg() {
 }
 
 #[test]
+pub fn brev_64() {
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
+        r#"
+        0:	c6 c0 c4 80	80c4c0c6 { 	r7:6 = brev(r5:4) }
+"#,
+    );
+
+    const ITERS: u64 = 10000;
+
+    let mut run_check_val = |val: u64| {
+        cpu.write_register(HexagonRegister::D2, val).unwrap();
+
+        let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
+        assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
+
+        let r7r6 = cpu.read_register::<u64>(HexagonRegister::D3).unwrap();
+        trace!("brev want val {val:64b} rev {:64b}", val.reverse_bits());
+        assert_eq!(r7r6, val.reverse_bits());
+
+        cpu.set_pc(0x1000).unwrap();
+    };
+
+    for val in (u64::MAX - ITERS)..u64::MAX {
+        run_check_val(val);
+    }
+
+    for val in 0..ITERS {
+        run_check_val(val);
+    }
+}
+
+#[test]
+pub fn brev_32() {
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
+        r#"
+        0:	c7 c0 45 8c	8c45c0c7 { 	r7 = brev(r5) }
+"#,
+    );
+
+    const ITERS: u32 = 10000;
+
+    let mut run_check_val = |val: u32| {
+        cpu.write_register(HexagonRegister::R5, val).unwrap();
+
+        let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
+        assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
+
+        let r7 = cpu.read_register::<u32>(HexagonRegister::R7).unwrap();
+        trace!("brev want val {val:32b} rev {:32b}", val.reverse_bits());
+        assert_eq!(r7, val.reverse_bits());
+
+        cpu.set_pc(0x1000).unwrap();
+    };
+
+    for val in (u32::MAX - ITERS)..u32::MAX {
+        run_check_val(val);
+    }
+
+    for val in 0..ITERS {
+        run_check_val(val);
+    }
+}
+
+#[test]
 pub fn testbit_reg_f() {
     let (mut cpu, mut mmu, mut ev) = setup_objdump(
         r#"

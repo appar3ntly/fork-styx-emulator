@@ -58,6 +58,9 @@ impl<T: CpuBackend> CallOtherCallback<T> for Cl1Handler {
     }
 }
 
+/// 11.10.2 Bit reverse instruction
+///
+/// Reverses the order of bits.
 #[derive(Debug)]
 pub struct BrevHandler {}
 impl<T: CpuBackend> CallOtherCallback<T> for BrevHandler {
@@ -78,12 +81,16 @@ impl<T: CpuBackend> CallOtherCallback<T> for BrevHandler {
             .to_u64()
             .with_context(|| "couldn't convert Rs(s) to u64")?;
 
+        // Quick sanity check in each branch: ensure that output is the same size as the
+        // input
         let rs_rev = if rs_val.size() == 8 {
-            trace!("brev {:64b} {:64b}", rs_64, rs_64.reverse_bits());
+            assert_eq!(output.size, 8);
+            trace!("64-bit brev {:64b} {:64b}", rs_64, rs_64.reverse_bits());
             SizedValue::from_u64(rs_64.reverse_bits(), 8)
         } else if rs_val.size() == 4 {
+            assert_eq!(output.size, 4);
             trace!(
-                "brev {:032b} {:032b}",
+                "32-bit brev {:032b} {:032b}",
                 rs_64 as u32,
                 (rs_64 as u32).reverse_bits()
             );

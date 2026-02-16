@@ -1,15 +1,15 @@
 # Copyright(c) 2019-2021 Qualcomm Innovation Center, Inc. All Rights Reserved.
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 define endian=little;
@@ -67377,12 +67377,12 @@ gp: reloc is epsilon [ reloc = 0; ] {
   # last shift is for field
   local field = ((S2_tableidxw_Rs32 >> offset) & mask) << 2;
 
-  # clear the bits in Rx  
+  # clear the bits in Rx
   local not_mask = ~(mask << 2);
   S2_tableidxw_Rx32d = S2_tableidxw_Rx32 & not_mask;
   S2_tableidxw_Rx32d = S2_tableidxw_Rx32d | field;
 
-} 
+}
 
 :S2_tableidxd S2_tableidxd_Rx32 S2_tableidxd_Rx32d S2_tableidxd_Rs32 S2_tableidxd_u4 S2_tableidxd_S6 is phase = 1 & immext = 0xffffffff & Parse != 0b00 & subinsn = 0 & b22 = 1 & b23 = 1 & b24 = 1 & b25 = 1 & b26 = 1 & b27 = 0 & b28 = 0 & b29 = 0 & b30 = 0 & b31 = 1 & S2_tableidxd_Rx32 & S2_tableidxd_Rx32d & S2_tableidxd_Rs32 & S2_tableidxd_u4 & S2_tableidxd_S6 unimpl
 
@@ -68788,7 +68788,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
 
   zxt_rs = zext(S2_tstbit_r_Rs32);
 
-  # Sign extend rt 
+  # Sign extend rt
   # From https://stackoverflow.com/questions/5814072/sign-extend-a-nine-bit-number-in-c
   local m:4;
   m = (1 << (7-1));
@@ -68811,7 +68811,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
 <done>
   and_res = zxt_rs & res;
   eq_res = and_res != 0;
-  
+
   S2_tstbit_r_Pd4 = (eq_res << 7) s>> 7;
 }
 
@@ -68824,7 +68824,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
 
   zxt_rs = zext(S4_ntstbit_r_Rs32);
 
-  # Sign extend rt 
+  # Sign extend rt
   # From https://stackoverflow.com/questions/5814072/sign-extend-a-nine-bit-number-in-c
   local m:4;
   m = (1 << (7-1));
@@ -68847,7 +68847,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
 <done>
   and_res = zxt_rs & res;
   eq_res = and_res == 0;
-  
+
   S4_ntstbit_r_Pd4 = (eq_res << 7) s>> 7;
 }
 
@@ -68855,7 +68855,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
   local sxt_rt:4;
   local res:4;
 
-  # Sign extend rt 
+  # Sign extend rt
   # From https://stackoverflow.com/questions/5814072/sign-extend-a-nine-bit-number-in-c
   local m:4;
   m = (1 << (7-1));
@@ -68882,7 +68882,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
   local sxt_rt:4;
   local res:4;
 
-  # Sign extend rt 
+  # Sign extend rt
   # From https://stackoverflow.com/questions/5814072/sign-extend-a-nine-bit-number-in-c
   local m:4;
   m = (1 << (7-1));
@@ -77969,7 +77969,7 @@ gp: reloc is epsilon [ reloc = 0; ] {
 }
 
 :S2_brevp S2_brevp_Rdd32 S2_brevp_Rss32 is phase = 1 & immext = 0xffffffff & Parse != 0b00 & subinsn = 0 & b5 = 0 & b6 = 1 & b7 = 1 & b21 = 0 & b22 = 1 & b23 = 1 & b24 = 0 & b25 = 0 & b26 = 0 & b27 = 0 & b28 = 0 & b29 = 0 & b30 = 0 & b31 = 1 & S2_brevp_Rdd32 & S2_brevp_Rss32 {
-  local tmp0:4;
+  local tmp0:8;
   tmp0 = brev(S2_brevp_Rss32);
   S2_brevp_Rdd32 = zext(tmp0);
 }
