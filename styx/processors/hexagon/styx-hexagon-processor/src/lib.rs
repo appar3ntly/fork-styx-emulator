@@ -55,6 +55,8 @@ impl ProcessorImpl for HexagonBuilder {
         // This should always be triggered at the end of a packet (see `HexagonPcodeBackend` implementation,
         // specifically details about the `DelayedInterrupt`, for more information), after the pc has
         // been incremented, so at this point, the Elr register will be set to the pc to return to.
+        //
+        // FIXME: multicore
         let interrupt_handler = |handle: CoreHandle, interrupt_number: i32| {
             // get cause, if the cause is 0 then we need to do the angel stuff
             let ssr = Ssr::new_with_raw_value(

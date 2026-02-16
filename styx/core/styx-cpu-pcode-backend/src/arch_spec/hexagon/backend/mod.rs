@@ -360,7 +360,7 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             fetch_decode_info.total_bytes_consumed,
         )? {
             // Only handle if there was actually an IRQ request
-            Ok(HexagonSingleInstructionAction::DelayedInterrupt(irqn)) => {
+            Ok(HexagonSingleInstructionAction(irqn)) => {
                 delayed_irqn = Some(irqn);
             }
             Err(reason) => return Ok(Err(reason)),
@@ -382,6 +382,7 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
         }
         self.execution_helper = Some(execution_helper_outer);
 
+        // FIXME: multicore?
         if let Some(irqn) = delayed_irqn {
             HookManager::trigger_interrupt_hook(self, mmu, ev, irqn)?;
         }
