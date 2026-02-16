@@ -15,6 +15,8 @@ use crate::{
     PCodeStateChange,
 };
 
+/// 11.10.2 XTYPE BIT - count leading ones
+/// Implemented with a callother.
 #[derive(Debug)]
 pub struct Cl1Handler {}
 
@@ -61,6 +63,8 @@ impl<T: CpuBackend> CallOtherCallback<T> for Cl1Handler {
 /// 11.10.2 Bit reverse instruction
 ///
 /// Reverses the order of bits.
+/// This callother is also used in various other loads and stores;
+/// see hexagon.slaspec for more information.
 #[derive(Debug)]
 pub struct BrevHandler {}
 impl<T: CpuBackend> CallOtherCallback<T> for BrevHandler {
@@ -82,7 +86,10 @@ impl<T: CpuBackend> CallOtherCallback<T> for BrevHandler {
             .with_context(|| "couldn't convert Rs(s) to u64")?;
 
         // Quick sanity check in each branch: ensure that output is the same size as the
-        // input
+        // input. Again, according to 11.10.2 the brev instruction can use both
+        // 32 and 64-bit inputs/outputs, but they should be consistent. To avoid
+        // footguns, the check is enforced for other locations where the brev callother
+        // is used.
         let rs_rev = if rs_val.size() == 8 {
             assert_eq!(output.size, 8);
             trace!("64-bit brev {:64b} {:64b}", rs_64, rs_64.reverse_bits());

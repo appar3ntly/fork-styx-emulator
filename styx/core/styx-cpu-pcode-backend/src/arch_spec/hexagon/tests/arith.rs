@@ -102,6 +102,70 @@ pub fn brev_64() {
 }
 
 #[test]
+pub fn cl1_32() {
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
+        r#"
+        0:	c1 c0 00 8c	8c00c0c1 { 	r1 = cl1(r0) }
+"#,
+    );
+
+    const ITERS: u32 = 10000;
+
+    let mut run_check_val = |val: u32| {
+        cpu.write_register(HexagonRegister::R0, val).unwrap();
+
+        let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
+        assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
+
+        let r1 = cpu.read_register::<u32>(HexagonRegister::R1).unwrap();
+        trace!("brev want val {val:32b} rev {:32b}", val.leading_ones());
+        assert_eq!(r1, val.leading_ones());
+
+        cpu.set_pc(0x1000).unwrap();
+    };
+
+    for val in (u32::MAX - ITERS)..u32::MAX {
+        run_check_val(val);
+    }
+
+    for val in 0..ITERS {
+        run_check_val(val);
+    }
+}
+
+#[test]
+pub fn cl1_64() {
+    let (mut cpu, mut mmu, mut ev) = setup_objdump(
+        r#"
+        0:	81 c0 42 88	8842c081 { 	r1 = cl1(r3:2) }
+"#,
+    );
+
+    const ITERS: u64 = 10000;
+
+    let mut run_check_val = |val: u64| {
+        cpu.write_register(HexagonRegister::D1, val).unwrap();
+
+        let exit = cpu.execute(&mut mmu, &mut ev, 1).unwrap();
+        assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
+
+        let r1 = cpu.read_register::<u32>(HexagonRegister::R1).unwrap();
+        trace!("brev want val {val:32b} rev {:32b}", val.leading_ones());
+        assert_eq!(r1, val.leading_ones());
+
+        cpu.set_pc(0x1000).unwrap();
+    };
+
+    for val in (u64::MAX - ITERS)..u64::MAX {
+        run_check_val(val);
+    }
+
+    for val in 0..ITERS {
+        run_check_val(val);
+    }
+}
+
+#[test]
 pub fn brev_32() {
     let (mut cpu, mut mmu, mut ev) = setup_objdump(
         r#"
