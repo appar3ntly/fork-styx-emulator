@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 //! # Styx-Processors
 
+use angel::handle_angel;
 use event_controller::HexagonEventController;
 use styx_core::arch::hexagon::register_fields::Ssr;
 use styx_core::arch::hexagon::HexagonRegister;
@@ -22,6 +23,7 @@ use styx_core::{
 };
 use tlb::HexagonTlb;
 
+mod angel;
 mod event_controller;
 mod tlb;
 
@@ -66,6 +68,10 @@ impl ProcessorImpl for HexagonBuilder {
                     .with_context(|| "couldn't read ssr in interrupt")?,
             );
 
+            // SSR.CAUSE equals 0 implies that we must handle ANGEL calls
+            // See QUIC QEMU's (branch hex-next) file target/hexagon/hexswi.c,
+            // specifically the case for HEX_EVENT_TRAP0 in
+            // hex_cpu_do_interrupt.
             if ssr.cause() == 0 {
                 let swi_no = handle
                     .cpu
@@ -76,9 +82,7 @@ impl ProcessorImpl for HexagonBuilder {
                     .read_register::<u32>(HexagonRegister::R1)
                     .with_context(|| "couldn't read r1 in interrupt")?;
 
-                if swi_no == 0x43 {
-                    print!("{}", arg as u8 as char);
-                }
+                handle_angel(swi_no, arg);
             }
 
             // get evb which is the interrupt vector base
