@@ -58,10 +58,14 @@ pub enum InterruptType {
 }
 
 /// Trap instruction, see 11.9.3 Trap.
-/// Hexagon Linux uses this for syscalls.
 ///
-/// See arch/hexagon/kernel/traps.c in Linux for reference,
-/// specifically the do_trap0 function.
+/// Also see implementation in QUIC QEMU, branch hex-next
+/// specifically target/hexagon/hexswi.c, specifically
+/// hexagon_cpu_do_interrupt. Also see fTRAP macro
+/// in target/hexagon/macros.h.
+///
+/// Also see do_raise_exception and hexagon_raise_exception_err
+/// in target/hexagon/op_helper.c.
 ///
 /// FIXME: multicore (delayed interrupt may need changing)
 #[derive(Debug)]
