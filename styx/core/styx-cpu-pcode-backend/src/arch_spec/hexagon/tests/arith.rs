@@ -4,7 +4,6 @@
 use crate::arch_spec::hexagon::tests::*;
 use test_case::test_case;
 
-// TODO: robustize
 #[test_case(-392, 392; "negative_392")]
 #[test_case(-8820920, 8820920; "negative_8820920")]
 #[test_case(8128900, 8128900; "negative_8128900")]
@@ -30,7 +29,8 @@ pub fn test_abs_helper(inp: i32, out: i32) {
     assert_eq!(r0, out);
 }
 
-// just a small range test
+/// Test absolute value instruction for a range of different values.
+/// More robust than the `test_abs_helper` function.
 #[test]
 pub fn test_abs_range() {
     let (mut cpu, mut mmu, mut ev) = setup_objdump(
