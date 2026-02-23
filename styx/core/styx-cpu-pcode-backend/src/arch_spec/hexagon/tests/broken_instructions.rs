@@ -41,8 +41,8 @@ fn wrong_size_sext_wrapper(
     cpu.write_register(HexagonRegister::R23, r23).unwrap();
     cpu.write_register(HexagonRegister::R24, r24).unwrap();
 
-    cpu.add_hook(styx_processor::hooks::StyxHook::MemoryWrite(
-        (0..(u32::MAX as u64)).into(),
+    cpu.add_hook(styx_processor::hooks::StyxHook::memory_write(
+        ..,
         Box::new(
             move |_proc: CoreHandle, address: u64, size: u32, _data: &[u8]| {
                 info!("address {address:x} size {size}");
@@ -53,8 +53,8 @@ fn wrong_size_sext_wrapper(
     ))
     .unwrap();
 
-    cpu.add_hook(styx_processor::hooks::StyxHook::MemoryRead(
-        (0..(u32::MAX as u64)).into(),
+    cpu.add_hook(styx_processor::hooks::StyxHook::memory_read(
+        ..,
         Box::new(
             move |_proc: CoreHandle, address: u64, size: u32, data: &mut [u8]| {
                 assert!(address <= MEM_RANGE_MAX);
