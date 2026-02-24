@@ -6,7 +6,7 @@ use styx_core::{
     errors::UnknownError,
     event_controller::{ActivateIRQnError, InterruptExecuted, Peripherals},
     hooks::{CoreHandle, StyxHook},
-    memory::Mmu,
+    memory::{MemoryBackend, Mmu},
     prelude::{
         log::{info, trace},
         Context, EventControllerImpl, ExceptionNumber,
@@ -50,7 +50,11 @@ impl EventControllerImpl for HexagonEventController {
         todo!()
     }
 
-    fn init(&mut self, cpu: &mut dyn CpuBackend, _mmu: &mut Mmu) -> Result<(), UnknownError> {
+    fn init(
+        &mut self,
+        cpu: &mut dyn CpuBackend,
+        _mmu: &mut MemoryBackend,
+    ) -> Result<(), UnknownError> {
         trace!("the hexagon event controller has started");
 
         // This should always be triggered at the end of a packet (see `HexagonPcodeBackend` implementation,

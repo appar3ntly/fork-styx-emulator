@@ -6,7 +6,7 @@ use styx_core::cpu::arch::hexagon::HexagonVariants;
 use styx_core::cpu::{Arch, Backend};
 use styx_core::loader::LoaderHints;
 use styx_core::memory::physical::PhysicalMemoryVariant;
-use styx_core::memory::Mmu;
+use styx_core::memory::MemoryBackend;
 use styx_core::prelude::Peripheral;
 use styx_core::{
     core::{
@@ -37,7 +37,7 @@ impl Default for HexagonBuilder {
 
 impl ProcessorImpl for HexagonBuilder {
     fn build(&self, args: &BuildProcessorImplArgs) -> Result<ProcessorBundle, UnknownError> {
-        let mut cpu = if let Backend::Pcode = args.backend {
+        let cpu = if let Backend::Pcode = args.backend {
             Box::new(HexagonPcodeBackend::new_engine_config(
                 self.variant.clone(),
                 ArchEndian::LittleEndian,
@@ -49,12 +49,8 @@ impl ProcessorImpl for HexagonBuilder {
             ));
         };
 
-        let mmu = match self.variant {
-            HexagonVariants::QDSP6V62 => Mmu::new(
-                Box::new(HexagonTlb::new()),
-                PhysicalMemoryVariant::FlatMemory,
-                cpu.as_mut(),
-            )?,
+        let memory = match self.variant {
+            HexagonVariants::QDSP6V62 => MemoryBackend::new(PhysicalMemoryVariant::FlatMemory),
             _ => {
                 return Err(UnknownError::msg(
                     "hexagon variant {self.variant:?} is not supported, only v62 is supported",
@@ -71,7 +67,8 @@ impl ProcessorImpl for HexagonBuilder {
 
         Ok(ProcessorBundle {
             cpu,
-            mmu,
+            tlb: Box::new(HexagonTlb::new()),
+            memory,
             event_controller: hec,
             peripherals,
             loader_hints: hints,
