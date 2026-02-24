@@ -19,7 +19,6 @@ use super::backend::HexagonPcodeBackend;
 mod arith;
 mod banking;
 mod branching;
-mod broken_instructions;
 mod compound;
 mod dotnew;
 mod dual_jumps;
