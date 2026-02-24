@@ -89,5 +89,3 @@ pub fn crswap<Size: RegisterValueCompatible + Eq + Debug + Copy>(
     assert_eq!(reg0_read, reg1_orig);
     assert_eq!(reg1_read, reg0_orig);
 }
-
-// TODO: check destination registers
