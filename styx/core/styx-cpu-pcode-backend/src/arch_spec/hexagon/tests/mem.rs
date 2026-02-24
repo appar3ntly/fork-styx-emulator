@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 use crate::arch_spec::hexagon::tests::*;
+use log::info;
+use styx_processor::hooks::{CoreHandle, Hookable};
+use test_case::test_case;
 
 #[test]
 fn test_mem_signextend_byte() {
