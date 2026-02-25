@@ -780,6 +780,7 @@ fn order_of_operations_64(objdump: &str, op: OOOperation, post_op: OOPostOperati
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn order_of_operations_helper(
     cpu: &mut HexagonPcodeBackend,
     mmu: &mut Mmu,
@@ -812,8 +813,7 @@ fn order_of_operations_helper(
     };
 
     // Write the shift, which is 32 bits anyway
-    cpu.write_register(HexagonRegister::R3, shift as u32)
-        .unwrap();
+    cpu.write_register(HexagonRegister::R3, shift).unwrap();
 
     let exit = cpu.execute(mmu, ev, 1).unwrap();
     assert_eq!(exit.exit_reason, TargetExitReason::InstructionCountComplete);
@@ -848,7 +848,7 @@ fn order_of_operations_helper(
 
         println!(
             "start {} shift {} shifted is {} {:x} post_op {:?} dest_start {}, output {}",
-            start as i32, shift, shifted as i32, shifted as u32, post_op, dest_start, output as u32
+            start as i32, shift, shifted as i32, shifted as u32, post_op, dest_start, output
         );
         assert_eq!(output, result as u32);
     } else if size == 8 {
@@ -941,10 +941,7 @@ fn mpyuuss_sext(objdump: &str, op: OOOperation, post_op: OOPostOperation) {
 
                 let out_emulated = cpu.read_register::<u64>(HexagonRegister::D5).unwrap();
 
-                info!(
-                    "initial_value {:x} r0 {:x} r3 {:x} out {}",
-                    initial_value, r0_val, r3_val, mul
-                );
+                info!("initial_value {initial_value:x} r0 {r0_val:x} r3 {r3_val:x} out {mul}",);
                 assert_eq!(out, out_emulated)
             }
         }
