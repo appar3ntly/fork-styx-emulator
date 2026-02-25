@@ -56,8 +56,6 @@ fn test_mem_load_halfword() {
 }
 
 #[allow(clippy::too_many_arguments)]
-/// TODO: instructions that do both loads and stores!
-/// Such as `{ memb(r0+#0x18) |= r3 }`
 fn wrong_size_sext_wrapper(
     objdump: &str,
     r21: u32,

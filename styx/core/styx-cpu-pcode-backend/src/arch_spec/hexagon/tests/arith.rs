@@ -233,7 +233,14 @@ pub fn testbit_reg_oob() {
     assert_eq!(p0, 0x00);
 }
 
-// TODO: what if the r1 value is negative?
+/// Test togglebit instruction, which was previously broken
+///
+/// 11.10.2 XTYPE BIT
+/// "When using a register to indicate the bit position and the value of the least-significant 7 bits of Rt
+/// is out of range, the destination register is unchanged."
+///
+/// This implies we do not have to test, for exmaple, negative (in 2's complement)
+/// register values.
 #[test_case(0x1000, 0x5;"toggle_on")]
 #[test_case(0x1020, 0x5;"toggle_off")]
 pub fn togglebit_r(r0: u32, r1: u32) {
@@ -252,7 +259,14 @@ pub fn togglebit_r(r0: u32, r1: u32) {
     assert_eq!(r2, r0 ^ (1 << r1));
 }
 
-// TODO: what if the r1 value is negative?
+/// Test clrbit instruction, which was previously broken.
+///
+/// 11.10.2 XTYPE BIT
+/// "When using a register to indicate the bit position and the value of the least-significant 7 bits of Rt
+/// is out of range, the destination register is unchanged."
+///
+/// This implies we do not have to test, for exmaple, negative (in 2's complement)
+/// register values.
 #[test_case(0x1020, 0x5, 0x1000;"already_set")]
 #[test_case(0x1000, 0x5, 0x1000;"not_set")]
 pub fn clearbit_r(r0: u32, r1: u32, expected: u32) {
@@ -422,10 +436,13 @@ fn arithmetic_shift_right_doubleword(
     assert_eq!(out_reg_endval, expected_output);
 }
 
-/// Also asr_r_vh, but not implemented.
-/// Also asrhub_rnd_sat, but not implemented
-/// Also asrhub_sat, but not implemneted
-/// TODO: signed values for the shfits might not work still.
+/// Tests vector arithmetic shift right instructions that were previously broken.
+///
+/// Other broken instructions include:
+///
+/// asr_r_vh, but not implemented (in pcode)
+/// asrhub_rnd_sat, but not implemented (in pcode)
+/// asrhub_sat, but not implemneted (in pcode)
 #[test_case(
 	r#"
        0:	02 c4 80 80	8080c402 { 	r3:2 = vasrh(r1:0,#0x4) }
