@@ -337,9 +337,11 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             }
         };
 
+        let ordering = fetch_decode_data.ordering.clone();
+
         let mut i = 0;
-        while i < fetch_decode_data.ordering.len() {
-            let pcode_instrs = &pcodes[fetch_decode_data.ordering[i]];
+        while i < ordering.len() {
+            let pcode_instrs = &pcodes[ordering[i]];
             trace!("executing single instruction pcodes: {pcode_instrs:?}");
             // this should actually do the fetching for each individual packet.
             match self.execute_single_instr(
@@ -365,7 +367,10 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
                 Ok(HexagonSingleInstructionAction::PcChange(pc)) if branched_pc.is_none() => {
                     branched_pc = Some(pc)
                 }
-                Err(e) => return Ok(Err(e)),
+                Err(e) => {
+                    self.cache = Some(cache);
+                    return Ok(Err(e));
+                }
                 _ => {}
             }
             total_instrs_executed += 1;
@@ -388,7 +393,10 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             Ok(HexagonSingleInstructionAction::DelayedInterrupt(irqn)) => {
                 delayed_irqn = Some(irqn);
             }
-            Err(reason) => return Ok(Err(reason)),
+            Err(reason) => {
+                self.cache = Some(cache);
+                return Ok(Err(reason));
+            }
             _ => {}
         }
 
@@ -405,8 +413,6 @@ impl BackendHelper<HexagonExecuteSingleInfo, Vec<Pcode>> for HexagonPcodeBackend
             trace!("calling post packet execute hooks...");
             execution_helper_outer.post_packet_execute(self);
         }
-
-        let ordering = fetch_decode_data.ordering.clone();
 
         self.cache = Some(cache);
         self.execution_helper = Some(execution_helper_outer);
@@ -1066,10 +1072,7 @@ impl HexagonPcodeBackend {
             initial_pc,
             CachedFetchDecodeResult {
                 pcodes: full_pcodes.clone(),
-                info: HexagonFetchDecodeData {
-                    total_bytes_consumed,
-                    ordering,
-                },
+                info: info.clone(),
             },
         );
 
