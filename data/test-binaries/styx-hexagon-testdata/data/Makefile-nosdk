@@ -46,17 +46,17 @@ VPATH += standalone_systests/crt0
 OBJDIR = build/objs
 TESTDIR = build
 
-$(OBJDIR): 
+$(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 $(OBJDIR)/%.o: %.c $(OBJDIR)
-	$(CC) -c $(CFLAGS) $(HEXFLAGS) $(INCLUDES) $< -o $@ 
-$(OBJDIR)/%.o: %.S $(OBJDIR) 
+	$(CC) -c $(CFLAGS) $(HEXFLAGS) $(INCLUDES) $< -o $@
+$(OBJDIR)/%.o: %.S $(OBJDIR)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $^ -o $@
 
 # For the test cases
 $(TESTDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/crt.a
-	$(CC) $(CFLAGS) $(ASSEMBLE_CFLAGS) $(OBJDIR)/crt.a $< -o $@ 
+	$(CC) $(CFLAGS) $(ASSEMBLE_CFLAGS) $(OBJDIR)/crt.a $< -o $@
 
 # Build the runtime
 _CRTDEPS = min_libc.o int.o tlb.o crt0.o crt0_standalone.o pte.o # test-thread.o
@@ -142,4 +142,3 @@ HEX_TESTS += # vwctrl                 # Disabled: missing Q6_mxmem2_bias_A intri
 
 TESTS = $(patsubst %, $(TESTDIR)/%, $(HEX_TESTS))
 all: $(TESTS)
-
