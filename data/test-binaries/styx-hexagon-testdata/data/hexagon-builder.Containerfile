@@ -29,53 +29,81 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive eatmydata \
 # Install common build utilities
     apt-get install -y --no-install-recommends \
-        curl \
+        wget \
         xz-utils \
+	unzip \
         ca-certificates
 
-ENV TOOLCHAIN_INSTALL /opt
-ENV TOOLCHAIN_RELEASE 12.Dec.2023
-ENV TOOLCHAIN_BASENAME "clang+llvm-${TOOLCHAIN_RELEASE}-cross-hexagon-unknown-linux-musl"
-ENV TOOLCHAIN_URL https://codelinaro.jfrog.io/artifactory/codelinaro-toolchain-for-hexagon/${TOOLCHAIN_RELEASE}/${TOOLCHAIN_BASENAME}.tar.xz
+ENV TOOLCHAIN_INSTALL   /opt
+ENV TOOLCHAIN_VERSION  "6.5.0.0"
+ENV TOOLCHAIN_TOOLSVER "19.0.07"
+ENV TOOLCHAIN_BASENAME "Hexagon_SDK_Linux.zip"
+ENV TOOLCHAIN_URL https://softwarecenter.qualcomm.com/api/download/software/sdks/Hexagon_SDK/Linux/Debian/${TOOLCHAIN_VERSION}/Hexagon_SDK_Linux.zip
 
-RUN curl -#SL "$TOOLCHAIN_URL" | tar -xJC "$TOOLCHAIN_INSTALL"
-ENV TOOLCHAIN_BIN "${TOOLCHAIN_INSTALL}/${TOOLCHAIN_BASENAME}/x86_64-linux-gnu/bin"
+# https://serverfault.com/questions/735882/unzip-from-stdin-to-stdout-funzip-python
+RUN wget "$TOOLCHAIN_URL" -O /tmp/${TOOLCHAIN_BASENAME}
+RUN unzip /tmp/${TOOLCHAIN_BASENAME} \
+      -d "$TOOLCHAIN_INSTALL" \
+      -x "*.qik" \
+      "Hexagon_SDK/${TOOLCHAIN_VERSION}/tools/HEXAGON_Tools/${TOOLCHAIN_TOOLSVER}" && \
+    rm /tmp/${TOOLCHAIN_BASENAME}
+	
+
+ENV TOOLCHAIN_BIN "${TOOLCHAIN_INSTALL}/Hexagon_SDK/${TOOLCHAIN_VERSION}/tools/HEXAGON_Tools/${TOOLCHAIN_TOOLSVER}/Tools/bin"
 ENV PATH $PATH:$TOOLCHAIN_BIN
 ENV MAKE /usr/bin/make
-ENV CC ${TOOLCHAIN_BIN}/hexagon-unknown-linux-musl-clang
+ENV CC ${TOOLCHAIN_BIN}/hexagon-clang
 
 FROM base AS build
 # fetch/build deps
 RUN DEBIAN_FRONTEND=noninteractive eatmydata \
     apt-get install -y --no-install-recommends \
         make \
+	build-essential \
         git \
         # why need this
-        libxml2
+        libxml2 \
+	cmake \
+	ninja-build
 RUN mkdir /src
 WORKDIR /src
+
 # single commit shallow clone QEMU repo
-RUN mkdir -p qemu && cd qemu && \
-    git init && \
-    git remote add origin https://gitlab.com/qemu-project/qemu.git && \
-    # August 13th, 2025
-    git fetch --depth 1 origin 5836af0783213b9355a6bbf85d9e6bc4c9c9363f && \
-    git checkout FETCH_HEAD
+#RUN mkdir -p qemu && cd qemu && \
+#    git init && \
+#    git remote add origin https://gitlab.com/qemu-project/qemu.git && \
+#    # August 13th, 2025
+#    git fetch --depth 1 origin 5836af0783213b9355a6bbf85d9e6bc4c9c9363f && \
+#    git checkout FETCH_HEAD
 
 # copy and build tests
-RUN mkdir -p tests/
-WORKDIR tests/
-RUN mkdir -p src/ && \
-    cp ../qemu/tests/tcg/hexagon/* src/
-COPY data/Makefile .
-RUN mkdir -p build/ && make -j $jobs all
+#RUN mkdir -p tests/
+#WORKDIR tests/
+#RUN mkdir -p src/ && \
+#    cp ../qemu/tests/tcg/hexagon/* src/
+#COPY data/Makefile .
+#RUN mkdir -p build/ && make -j $jobs all
 
-FROM build AS release
-RUN mkdir -p /testdata/bin
-WORKDIR /testdata
-COPY --from=build /src/tests/build/* bin/
+# copy and build qemu hexagon testing
+WORKDIR /src
+RUN git clone https://github.com/qualcomm/qemu-hexagon-testing
+WORKDIR /src/qemu-hexagon-testing
+RUN cmake -S standalone_systests -B build-systests \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=${PWD}/cmake/hexagon-standalone.cmake \
+  -DHEXAGON_SDK_ROOT=${TOOLCHAIN_INSTALL}/Hexagon_SDK/${TOOLCHAIN_VERSION} \
+  -DHEXAGON_ARCH=v71 && \
+  cmake --build build-systests
 
 # test artifacts are in /testdata/bin
+FROM build AS release
+RUN mkdir -p /testdata/bin/qemu-tests
+RUN mkdir -p /testdata/bin/qemu-hexagon-testing
+WORKDIR /testdata
+#COPY --from=build /src/tests/build/* bin/qemu-tests
+COPY --from=build /src/qemu-hexagon-testing/build-systests/bin/* bin/qemu-hexagon-testing
+
+WORKDIR /src
 
 # container will exit (then rm) after 100 seconds
 ENTRYPOINT [ "sh", "-c", "sleep 100" ]
